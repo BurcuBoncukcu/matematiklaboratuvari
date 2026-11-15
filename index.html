@@ -130,7 +130,7 @@
 
     const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-    // 1) GitHub Actions'ın ürettiği projects.json
+    // 1) GitHub Pages (Jekyll) derlemesinin ürettiği projects.json
     async function fromManifest() {
       const res = await fetch('projects.json', { cache: 'no-store' });
       if (!res.ok) throw new Error('manifest yok');
@@ -192,11 +192,21 @@
         try { projects = await fromGitHubApi(); }
         catch {
           countEl.textContent = 'Projeler yüklenemedi';
-          grid.innerHTML = `<div class="empty"><strong>Proje listesi alınamadı</strong>Sayfayı yenilemeyi dene. Sorun sürerse GitHub Actions çalışmasını kontrol et.</div>`;
+          grid.innerHTML = `<div class="empty"><strong>Proje listesi alınamadı</strong>Sayfayı yenilemeyi dene.</div>`;
           return;
         }
       }
       projects.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+      render();
+
+      // Açıklama için her projenin <title> etiketini oku
+      await Promise.all(projects.filter(p => !p.title).map(async p => {
+        try {
+          const html = await (await fetch(`projects/${encodeURIComponent(p.file)}`)).text();
+          const t = new DOMParser().parseFromString(html, 'text/html').title;
+          if (t) p.title = t.trim();
+        } catch {}
+      }));
       render();
     })();
 
