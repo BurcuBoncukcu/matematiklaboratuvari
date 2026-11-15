@@ -70,7 +70,7 @@ layout: null
     .search::placeholder { color: var(--muted); }
     .search:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
 
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
 
     .card {
       display: flex; align-items: center; gap: 14px;
@@ -92,7 +92,7 @@ layout: null
       transition: background .3s var(--ease), color .3s var(--ease);
     }
     .card:hover .badge { background: var(--accent); color: #fff; }
-    .name { flex: 1; font-size: 17px; font-weight: 650; letter-spacing: -.01em; word-break: break-word; }
+    .name { flex: 1; font-size: 17px; font-weight: 650; letter-spacing: -.01em; min-width: 0; overflow-wrap: anywhere; }
     .arrow { color: var(--muted); font-size: 18px; transition: transform .3s var(--ease), color .3s var(--ease); }
     .card:hover .arrow { color: var(--accent); transform: translateX(3px); }
 
