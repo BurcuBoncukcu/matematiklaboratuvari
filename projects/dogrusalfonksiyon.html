@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TYMM 9. Sınıf Matematik: Doğrusal Fonksiyon Nitelikleri Laboratuvarı (v4)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    body {
+      background: #f8fafc;
+      color: #0f172a;
+    }
+    input[type="range"] {
+      accent-color: #2563eb;
+    }
+    .card-shadow {
+      box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06);
+    }
+  </style>
+</head>
+<body class="min-h-screen p-4 md:p-6">
+
+  <div class="max-w-7xl mx-auto flex flex-col gap-5">
+    
+    <!-- Üst Başlık -->
+    <header class="bg-white border border-slate-200 rounded-2xl px-6 py-4 flex flex-wrap justify-between items-center gap-4 card-shadow">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center font-extrabold text-xl shadow-sm">
+          f(x)
+        </div>
+        <div>
+          <h1 class="text-lg md:text-xl font-extrabold text-slate-900">Doğrusal Fonksiyonların Nitelikleri Laboratuvarı</h1>
+          <p class="text-xs text-slate-500 font-medium">TYMM 9. Sınıf Matematik • Sayı Kümeleri (ℝ, ℤ, ℤ⁺, ℤ⁻, ℕ) ve Aralık Tabanlı Analiz</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button type="button" onclick="resetDefaults()" class="px-4 py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition">
+          Varsayılana Dön
+        </button>
+        <button type="button" onclick="randomExample()" class="px-4 py-2 text-xs font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl transition">
+          🎲 Rastgele Fonksiyon Üret
+        </button>
+      </div>
+    </header>
+
+    <!-- Ana Grid: Sol Grafik & Parametreler | Sağ Nitelik Analiz Kartları -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      
+      <!-- SOL PANEL (5 Sütun): İnteraktif Grafik ve Parametre Kontrolleri -->
+      <div class="lg:col-span-5 flex flex-col gap-4">
+        
+        <!-- Fonksiyon Kuralı & Parametreler -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 card-shadow flex flex-col gap-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Fonksiyon Tanımı</span>
+            <span id="func-formula" class="text-sm md:text-base font-extrabold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg border border-blue-100">
+              f : [-4, 6] → ℝ, f(x) = 2x - 4
+            </span>
+          </div>
+
+          <!-- Eğim (a) ve Sabit Terim (b) Manuel Giriş -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 flex flex-col gap-1.5">
+              <div class="flex justify-between items-center text-xs font-bold">
+                <label for="input-a" class="text-slate-700">Eğim (a):</label>
+                <span class="text-[10px] font-semibold text-slate-400">Örn: 1/2, -3/4, 2</span>
+              </div>
+              <input type="text" id="input-a" value="2" placeholder="Örn: 1/2 veya 2" 
+                     class="w-full px-3 py-2 text-sm font-extrabold text-blue-700 bg-white border-2 border-slate-300 rounded-lg focus:border-blue-500 focus:outline-none transition"
+                     oninput="updateModel()">
+              <span id="err-a" class="text-[10px] font-bold text-rose-600 hidden">Geçersiz sayı! (Örn: 1/2 veya -3)</span>
+            </div>
+
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 flex flex-col gap-1.5">
+              <div class="flex justify-between items-center text-xs font-bold">
+                <label for="input-b" class="text-slate-700">Sabit Terim (b):</label>
+                <span class="text-[10px] font-semibold text-slate-400">Örn: -5/2, 1.5, -4</span>
+              </div>
+              <input type="text" id="input-b" value="-4" placeholder="Örn: -3/2 veya -4" 
+                     class="w-full px-3 py-2 text-sm font-extrabold text-blue-700 bg-white border-2 border-slate-300 rounded-lg focus:border-blue-500 focus:outline-none transition"
+                     oninput="updateModel()">
+              <span id="err-b" class="text-[10px] font-bold text-rose-600 hidden">Geçersiz sayı! (Örn: -3/2 veya 4)</span>
+            </div>
+          </div>
+
+          <!-- Tanım Kümesi ve Değer Kümesi Açılır Menüleri + Aralık Sayaçları -->
+          <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/70 flex flex-col gap-3">
+            
+            <!-- İki Açılır Menü Yan Yana: Tanım Kümesi (A) ve Değer Kümesi (B) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="flex flex-col gap-1">
+                <label for="domain-select" class="text-[11px] font-bold text-indigo-700">Tanım Kümesi (A):</label>
+                <select id="domain-select" onchange="onDomainSelectChange()" class="w-full text-xs font-extrabold text-indigo-800 bg-white border-2 border-indigo-200 rounded-xl px-2.5 py-2 focus:border-indigo-500 focus:outline-none cursor-pointer">
+                  <option value="interval">Aralık [x₁, x₂]</option>
+                  <option value="R">ℝ (Reel Sayılar)</option>
+                  <option value="Z">ℤ (Tam Sayılar)</option>
+                  <option value="Z+">ℤ⁺ (Pozitif Tam Sayılar)</option>
+                  <option value="Z-">ℤ⁻ (Negatif Tam Sayılar)</option>
+                  <option value="N">ℕ (Doğal Sayılar)</option>
+                </select>
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label for="codomain-select" class="text-[11px] font-bold text-purple-700">Değer Kümesi (B):</label>
+                <select id="codomain-select" onchange="updateModel()" class="w-full text-xs font-extrabold text-purple-800 bg-white border-2 border-purple-200 rounded-xl px-2.5 py-2 focus:border-purple-500 focus:outline-none cursor-pointer">
+                  <option value="R">ℝ (Reel Sayılar)</option>
+                  <option value="Z">ℤ (Tam Sayılar)</option>
+                  <option value="Z+">ℤ⁺ (Pozitif Tam Sayılar)</option>
+                  <option value="Z-">ℤ⁻ (Negatif Tam Sayılar)</option>
+                  <option value="N">ℕ (Doğal Sayılar)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Sayaç Barları (Tanım Kümesi "Aralık [x₁, x₂]" seçiliyken aktif) -->
+            <div id="interval-sliders-box" class="pt-2.5 border-t border-slate-200/80 flex flex-col gap-2 transition-all">
+              <div class="flex justify-between items-center">
+                <span class="text-[11px] font-bold text-slate-600">Aralık Sınırları (x₁ ve x₂):</span>
+                <span id="domain-badge" class="text-xs font-extrabold text-indigo-700 bg-indigo-100 px-2.5 py-0.5 rounded-md">[-4, 6]</span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <div class="flex justify-between text-[11px] font-semibold text-slate-500 mb-1">
+                    <span>Alt Sınır (x₁): <b id="val-x1" class="text-slate-800">-4</b></span>
+                    <label class="inline-flex items-center gap-1 cursor-pointer text-indigo-600 font-bold">
+                      <input type="checkbox" id="inc-x1" checked onchange="updateModel()" class="rounded text-indigo-600"> Dahil [
+                    </label>
+                  </div>
+                  <input type="range" id="slider-x1" min="-8" max="2" step="1" value="-4" class="w-full cursor-pointer" oninput="updateModel()">
+                </div>
+
+                <div>
+                  <div class="flex justify-between text-[11px] font-semibold text-slate-500 mb-1">
+                    <span>Üst Sınır (x₂): <b id="val-x2" class="text-slate-800">6</b></span>
+                    <label class="inline-flex items-center gap-1 cursor-pointer text-indigo-600 font-bold">
+                      <input type="checkbox" id="inc-x2" checked onchange="updateModel()" class="rounded text-indigo-600"> Dahil ]
+                    </label>
+                  </div>
+                  <input type="range" id="slider-x2" min="-2" max="8" step="1" value="6" class="w-full cursor-pointer" oninput="updateModel()">
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Fonksiyon Tanımlı mı Uyarısı -->
+          <div id="validity-alert" class="hidden bg-rose-50 border-2 border-rose-300 rounded-xl p-3 text-xs text-rose-800 flex items-start gap-2.5">
+            <span class="text-lg">⚠️</span>
+            <div>
+              <p class="font-extrabold">Fonksiyon Belirtmez (Tanımsızlık Durumu)!</p>
+              <p id="validity-msg" class="text-[11px] mt-0.5 leading-relaxed"></p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Koordinat Sistemi Canvas -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 card-shadow flex flex-col items-center">
+          <div class="w-full flex justify-between items-center mb-2 px-1">
+            <span class="text-xs font-bold text-slate-600">Koordinat Düzlemi Görünümü</span>
+            <div class="flex items-center gap-3 text-[11px] font-semibold">
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> f(x) &gt; 0</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span> f(x) &lt; 0</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> Sıfırı</span>
+            </div>
+          </div>
+          <canvas id="graphCanvas" width="460" height="360" class="w-full h-auto bg-slate-50 rounded-xl border border-slate-200"></canvas>
+          <p id="canvas-caption" class="text-[11px] text-slate-400 mt-2 text-center">
+            Mavi gölge <b>Tanım Kümesi</b>ni, mor gölge ise y-eksenindeki <b>Görüntü Kümesi</b>ni gösterir.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- SAĞ PANEL (7 Sütun): Fonksiyonun Nitelikleri ve İnteraktif Sorgulama -->
+      <div class="lg:col-span-7 flex flex-col gap-4">
+
+        <!-- Mod Seçici -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-3 card-shadow flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <button type="button" id="btn-mode-explore" onclick="setInteractionMode('explore')" class="px-4 py-2 rounded-xl text-xs font-extrabold bg-blue-600 text-white shadow-sm transition">
+              👁️ Canlı İnceleme Modu (Hepsini Gör)
+            </button>
+            <button type="button" id="btn-mode-quiz" onclick="setInteractionMode('quiz')" class="px-4 py-2 rounded-xl text-xs font-extrabold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+              ✍️ Sorgulama & Pratik Modu (Aralıkları Bul)
+            </button>
+          </div>
+          <span id="mode-desc" class="text-[11px] font-semibold text-slate-500 pr-2">
+            Tüm nitelikler anlık güncellenir.
+          </span>
+        </div>
+
+        <!-- 6 Nitelik Kartı Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <!-- 1. Tanım ve Görüntü Kümesi -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-4 card-shadow flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <span class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-extrabold text-xs">1</span>
+                <h2 class="text-sm font-extrabold text-slate-800">Tanım ve Görüntü Kümesi</h2>
+              </div>
+              <div class="space-y-2 text-xs mt-3">
+                <div class="flex justify-between items-center bg-indigo-50/70 px-3 py-2 rounded-lg border border-indigo-100">
+                  <span class="font-semibold text-slate-600">Tanım Kümesi (A):</span>
+                  <span id="out-domain" class="font-extrabold text-indigo-700 text-sm">[-4, 6]</span>
+                </div>
+                <div class="flex justify-between items-center bg-purple-50/70 px-3 py-2 rounded-lg border border-purple-100">
+                  <span class="font-semibold text-slate-600">Görüntü Kümesi f(A):</span>
+                  <span id="out-range" class="font-extrabold text-purple-700 text-sm">[-12, 8]</span>
+                </div>
+              </div>
+            </div>
+            <p id="out-range-note" class="text-[11px] text-slate-400 mt-3">Uç noktaların dahil ([ ]) veya hariç (( )) olma durumuna dikkat ediniz.</p>
+          </div>
+
+          <!-- 2. Fonksiyonun Sıfırı -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-4 card-shadow flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <span class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-extrabold text-xs">2</span>
+                <h2 class="text-sm font-extrabold text-slate-800">Fonksiyonun Sıfırı</h2>
+              </div>
+              <p class="text-xs text-slate-500 mb-2">f(x) = 0 denklemini sağlayan ve tanım kümesinde yer alan x değeridir.</p>
+              <div class="bg-amber-50/80 px-3 py-2.5 rounded-lg border border-amber-200 flex justify-between items-center">
+                <span class="text-xs font-semibold text-amber-900">Sıfır Noktası:</span>
+                <span id="out-zero" class="text-sm font-extrabold text-amber-700">x = 2</span>
+              </div>
+            </div>
+            <p id="out-zero-note" class="text-[11px] text-slate-400 mt-3">Grafik x-eksenini (2, 0) noktasında keser.</p>
+          </div>
+
+          <!-- 3. Fonksiyonun İşareti -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-4 card-shadow md:col-span-2">
+            <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+              <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-extrabold text-xs">3</span>
+                <h2 class="text-sm font-extrabold text-slate-800">Fonksiyonun İşareti — Hangi Aralıkta / Kümede?</h2>
+              </div>
+              <span class="text-[11px] font-bold text-slate-400">x-ekseninin üstü (+), altı (−)</span>
+            </div>
+
+            <div id="sign-explore" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div class="bg-emerald-50/80 border border-emerald-200 rounded-xl p-3 flex justify-between items-center gap-2">
+                <span class="font-bold text-emerald-900">Pozitif Olduğu Yer (f(x) &gt; 0):</span>
+                <span id="out-pos-int" class="font-extrabold text-emerald-700 text-sm text-right">(2, 6]</span>
+              </div>
+              <div class="bg-rose-50/80 border border-rose-200 rounded-xl p-3 flex justify-between items-center gap-2">
+                <span class="font-bold text-rose-900">Negatif Olduğu Yer (f(x) &lt; 0):</span>
+                <span id="out-neg-int" class="font-extrabold text-rose-700 text-sm text-right">[-4, 2)</span>
+              </div>
+            </div>
+
+            <div id="sign-quiz" class="hidden flex-col gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+              <p id="quiz-sign-prompt" class="text-xs font-bold text-slate-700">
+                Soru: Bu fonksiyon <span class="text-emerald-600 underline">hangi aralıkta / kümede pozitif (f(x) &gt; 0)</span> değerler alır?
+              </p>
+              <div id="quiz-sign-options" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+              <div id="quiz-sign-fb" class="text-xs font-semibold hidden"></div>
+            </div>
+          </div>
+
+          <!-- 4. Artan / Azalan Olma Durumu -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-4 card-shadow">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="w-7 h-7 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center font-extrabold text-xs">4</span>
+              <h2 class="text-sm font-extrabold text-slate-800">Artan / Azalanlık — Hangi Aralıkta?</h2>
+            </div>
+
+            <div id="mono-explore" class="space-y-2 text-xs mt-3">
+              <div class="bg-sky-50/80 border border-sky-200 rounded-xl p-3 flex flex-col gap-1">
+                <span class="text-slate-500 font-semibold">Davranış ve Aralık:</span>
+                <span id="out-mono" class="font-extrabold text-sky-800 text-sm">[-4, 6] aralığında Artandır</span>
+              </div>
+              <p id="out-mono-note" class="text-[11px] text-slate-400">Eğim a &gt; 0 olduğu için tanım kümesinin tamamında artandır.</p>
+            </div>
+
+            <div id="mono-quiz" class="hidden flex-col gap-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200 mt-2">
+              <p class="text-xs font-bold text-slate-700">Soru: Fonksiyon hangi aralıkta/kümede artan veya azalandır?</p>
+              <div id="quiz-mono-options" class="flex flex-col gap-1.5"></div>
+              <div id="quiz-mono-fb" class="text-xs font-semibold hidden"></div>
+            </div>
+          </div>
+
+          <!-- 5. Bire Birlik -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-4 card-shadow">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="w-7 h-7 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center font-extrabold text-xs">5</span>
+              <h2 class="text-sm font-extrabold text-slate-800">Bire Birlik — Hangi Aralıkta?</h2>
+            </div>
+
+            <div id="onetoone-explore" class="space-y-2 text-xs mt-3">
+              <div class="bg-teal-50/80 border border-teal-200 rounded-xl p-3 flex flex-col gap-1">
+                <span class="text-slate-500 font-semibold">Bire Bir Olduğu Aralık / Küme:</span>
+                <span id="out-onetoone" class="font-extrabold text-teal-800 text-sm">[-4, 6] aralığında Bire Birdir</span>
+              </div>
+              <p id="out-onetoone-note" class="text-[11px] text-slate-400">Yatay doğru testi: Grafik yatay doğruları en fazla 1 noktada keser.</p>
+            </div>
+
+            <div id="onetoone-quiz" class="hidden flex-col gap-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200 mt-2">
+              <p class="text-xs font-bold text-slate-700">Soru: Bu fonksiyon hangi aralıkta/kümede bire birdir?</p>
+              <div id="quiz-onetoone-options" class="flex flex-col gap-1.5"></div>
+              <div id="quiz-onetoone-fb" class="text-xs font-semibold hidden"></div>
+            </div>
+          </div>
+
+          <!-- 6. Maksimum ve Minimum Değerleri -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-4 card-shadow md:col-span-2">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center font-extrabold text-xs">6</span>
+                <h2 class="text-sm font-extrabold text-slate-800">Maksimum ve Minimum Değerleri</h2>
+              </div>
+              <span class="text-[11px] text-slate-400 font-medium">Sınırsız veya açık uçlu kümelerde maks/min olmayabilir!</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div class="bg-orange-50/80 border border-orange-200 rounded-xl p-3 flex justify-between items-center">
+                <span class="font-bold text-orange-900">Maksimum Değer:</span>
+                <span id="out-max" class="font-extrabold text-orange-700 text-sm">8 (x = 6 için)</span>
+              </div>
+              <div class="bg-blue-50/80 border border-blue-200 rounded-xl p-3 flex justify-between items-center">
+                <span class="font-bold text-blue-900">Minimum Değer:</span>
+                <span id="out-min" class="font-extrabold text-blue-700 text-sm">-12 (x = -4 için)</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let interactionMode = 'explore';
+
+    const SET_LABELS = {
+      'R': 'ℝ',
+      'Z': 'ℤ',
+      'Z+': 'ℤ⁺',
+      'Z-': 'ℤ⁻',
+      'N': 'ℕ'
+    };
+
+    function gcd(a, b) {
+      a = Math.abs(a);
+      b = Math.abs(b);
+      while (b) {
+        let t = b;
+        b = a % b;
+        a = t;
+      }
+      return a;
+    }
+
+    function makeFrac(num, den = 1) {
+      if (den === 0) return null;
+      if (den < 0) {
+        num = -num;
+        den = -den;
+      }
+      if (num === 0) return { num: 0, den: 1, val: 0 };
+      const g = gcd(num, den);
+      const n = num / g;
+      const d = den / g;
+      return { num: n, den: d, val: n / d };
+    }
+
+    function addFrac(f1, f2) {
+      return makeFrac(f1.num * f2.den + f2.num * f1.den, f1.den * f2.den);
+    }
+
+    function mulFrac(f1, f2) {
+      return makeFrac(f1.num * f2.num, f1.den * f2.den);
+    }
+
+    function divFrac(f1, f2) {
+      if (f2.num === 0) return null;
+      return makeFrac(f1.num * f2.den, f1.den * f2.num);
+    }
+
+    function negFrac(f) {
+      return makeFrac(-f.num, f.den);
+    }
+
+    function parseRational(str) {
+      if (!str) return null;
+      const cleaned = str.trim().replace(',', '.');
+      if (cleaned === '' || cleaned === '-' || cleaned === '+') return null;
+
+      if (cleaned.includes('/')) {
+        const parts = cleaned.split('/');
+        if (parts.length !== 2) return null;
+        const n = Number(parts[0].trim());
+        const d = Number(parts[1].trim());
+        if (!Number.isInteger(n) || !Number.isInteger(d) || d === 0) return null;
+        return makeFrac(n, d);
+      } else {
+        const val = Number(cleaned);
+        if (isNaN(val) || !isFinite(val)) return null;
+        if (Number.isInteger(val)) return makeFrac(val, 1);
+        const decStr = cleaned.split('.')[1] || '';
+        if (decStr.length > 4) return null;
+        const factor = Math.pow(10, decStr.length);
+        return makeFrac(Math.round(val * factor), factor);
+      }
+    }
+
+    function formatFrac(f, withDecimal = false) {
+      if (!f) return '';
+      if (f.den === 1) return `${f.num}`;
+      const base = `${f.num}/${f.den}`;
+      if (withDecimal) {
+        const dec = Number(f.val.toFixed(2));
+        return `${base} (${dec})`;
+      }
+      return base;
+    }
+
+    function formatIntervalFrac(leftF, leftInc, rightF, rightInc) {
+      const lBr = leftInc ? '[' : '(';
+      const rBr = rightInc ? ']' : ')';
+      return `${lBr}${formatFrac(leftF)}, ${formatFrac(rightF)}${rBr}`;
+    }
+
+    function onDomainSelectChange() {
+      const domainType = document.getElementById('domain-select').value;
+      const sliderBox = document.getElementById('interval-sliders-box');
+      if (domainType === 'interval') {
+        sliderBox.classList.remove('opacity-40', 'pointer-events-none');
+      } else {
+        sliderBox.classList.add('opacity-40', 'pointer-events-none');
+      }
+      updateModel();
+    }
+
+    function resetDefaults() {
+      document.getElementById('input-a').value = '2';
+      document.getElementById('input-b').value = '-4';
+      document.getElementById('slider-x1').value = -4;
+      document.getElementById('slider-x2').value = 6;
+      document.getElementById('inc-x1').checked = true;
+      document.getElementById('inc-x2').checked = true;
+      document.getElementById('domain-select').value = 'interval';
+      document.getElementById('codomain-select').value = 'R';
+      onDomainSelectChange();
+    }
+
+    function randomExample() {
+      const aChoices = ['1/2', '-1/2', '3/2', '-2/3', '2', '-2', '1', '-1', '3', '-3'];
+      const bChoices = ['-3', '2', '5/2', '-3/2', '0', '4', '-2', '1'];
+      const dTypes = ['interval', 'R', 'Z', 'Z+', 'Z-', 'N'];
+      const chosenType = dTypes[Math.floor(Math.random() * dTypes.length)];
+
+      let a = aChoices[Math.floor(Math.random() * aChoices.length)];
+      let b = bChoices[Math.floor(Math.random() * bChoices.length)];
+      if (['Z', 'Z+', 'Z-', 'N'].includes(chosenType) && Math.random() > 0.25) {
+        const intA = [-2, -1, 1, 2, 3];
+        const intB = [-3, -2, -1, 0, 1, 2, 3];
+        a = intA[Math.floor(Math.random() * intA.length)].toString();
+        b = intB[Math.floor(Math.random() * intB.length)].toString();
+      }
+
+      const x1 = Math.floor(Math.random() * 5) - 6;
+      const x2 = Math.floor(Math.random() * 5) + 2;
+      const inc1 = Math.random() > 0.3;
+      const inc2 = Math.random() > 0.3;
+
+      document.getElementById('input-a').value = a;
+      document.getElementById('input-b').value = b;
+      document.getElementById('slider-x1').value = x1;
+      document.getElementById('slider-x2').value = x2;
+      document.getElementById('inc-x1').checked = inc1;
+      document.getElementById('inc-x2').checked = inc2;
+      document.getElementById('domain-select').value = chosenType;
+      document.getElementById('codomain-select').value = 'R';
+      onDomainSelectChange();
+    }
+
+    function setInteractionMode(mode) {
+      interactionMode = mode;
+      const btnExplore = document.getElementById('btn-mode-explore');
+      const btnQuiz = document.getElementById('btn-mode-quiz');
+      const modeDesc = document.getElementById('mode-desc');
+
+      if (mode === 'explore') {
+        btnExplore.className = 'px-4 py-2 rounded-xl text-xs font-extrabold bg-blue-600 text-white shadow-sm transition';
+        btnQuiz.className = 'px-4 py-2 rounded-xl text-xs font-extrabold bg-slate-100 text-slate-600 hover:bg-slate-200 transition';
+        modeDesc.innerText = 'Tüm nitelikler anlık güncellenir.';
+
+        document.getElementById('sign-explore').classList.remove('hidden');
+        document.getElementById('sign-quiz').classList.add('hidden');
+
+        document.getElementById('mono-explore').classList.remove('hidden');
+        document.getElementById('mono-quiz').classList.add('hidden');
+
+        document.getElementById('onetoone-explore').classList.remove('hidden');
+        document.getElementById('onetoone-quiz').classList.add('hidden');
+      } else {
+        btnQuiz.className = 'px-4 py-2 rounded-xl text-xs font-extrabold bg-indigo-600 text-white shadow-sm transition';
+        btnExplore.className = 'px-4 py-2 rounded-xl text-xs font-extrabold bg-slate-100 text-slate-600 hover:bg-slate-200 transition';
+        modeDesc.innerText = 'Sorulan aralıkları/kümeleri seçerek kendini test et!';
+
+        document.getElementById('sign-explore').classList.add('hidden');
+        document.getElementById('sign-quiz').classList.remove('hidden');
+        document.getElementById('sign-quiz').classList.add('flex');
+
+        document.getElementById('mono-explore').classList.add('hidden');
+        document.getElementById('mono-quiz').classList.remove('hidden');
+        document.getElementById('mono-quiz').classList.add('flex');
+
+        document.getElementById('onetoone-explore').classList.add('hidden');
+        document.getElementById('onetoone-quiz').classList.remove('hidden');
+        document.getElementById('onetoone-quiz').classList.add('flex');
+      }
+      updateModel();
+    }
+
+    function isInCodomain(fracVal, codomain) {
+      if (codomain === 'R') return true;
+      const isInt = fracVal.den === 1;
+      if (!isInt) return false;
+      if (codomain === 'Z') return true;
+      if (codomain === 'Z+') return fracVal.num > 0;
+      if (codomain === 'Z-') return fracVal.num < 0;
+      if (codomain === 'N') return fracVal.num >= 0;
+      return true;
+    }
+
+    function updateModel() {
+      const rawA = document.getElementById('input-a').value;
+      const rawB = document.getElementById('input-b').value;
+      const errA = document.getElementById('err-a');
+      const errB = document.getElementById('err-b');
+
+      const fracA = parseRational(rawA);
+      const fracB = parseRational(rawB);
+
+      if (!fracA) { errA.classList.remove('hidden'); return; } else { errA.classList.add('hidden'); }
+      if (!fracB) { errB.classList.remove('hidden'); return; } else { errB.classList.add('hidden'); }
+
+      let x1 = parseInt(document.getElementById('slider-x1').value);
+      let x2 = parseInt(document.getElementById('slider-x2').value);
+      const inc1 = document.getElementById('inc-x1').checked;
+      const inc2 = document.getElementById('inc-x2').checked;
+      const domainType = document.getElementById('domain-select').value;
+      const codomain = document.getElementById('codomain-select').value;
+      const codomainLabel = SET_LABELS[codomain];
+
+      if (x1 >= x2) {
+        x2 = x1 + 1;
+        document.getElementById('slider-x2').value = x2;
+      }
+
+      document.getElementById('val-x1').innerText = x1;
+      document.getElementById('val-x2').innerText = x2;
+
+      const fX1 = makeFrac(x1, 1);
+      const fX2 = makeFrac(x2, 1);
+      const domainStr = domainType === 'interval' ? formatIntervalFrac(fX1, inc1, fX2, inc2) : SET_LABELS[domainType];
+
+      document.getElementById('domain-badge').innerText = domainStr;
+      document.getElementById('out-domain').innerText = domainStr;
+
+      // Fonksiyon kuralı metni
+      let ruleStr = '';
+      if (fracA.num === 0) {
+        ruleStr = `${formatFrac(fracB)}`;
+      } else {
+        let aPart = '';
+        if (fracA.num === 1 && fracA.den === 1) aPart = 'x';
+        else if (fracA.num === -1 && fracA.den === 1) aPart = '-x';
+        else if (fracA.den === 1) aPart = `${fracA.num}x`;
+        else aPart = `(${fracA.num}/${fracA.den})x`;
+
+        let bPart = '';
+        if (fracB.num > 0) bPart = ` + ${formatFrac(fracB)}`;
+        else if (fracB.num < 0) bPart = ` - ${formatFrac(negFrac(fracB))}`;
+        ruleStr = `${aPart}${bPart}`;
+      }
+      document.getElementById('func-formula').innerText = `f : ${domainStr} → ${codomainLabel},  f(x) = ${ruleStr}`;
+
+      // Tanımlılık Kontrolü
+      const validityAlert = document.getElementById('validity-alert');
+      const validityMsg = document.getElementById('validity-msg');
+      let invalidReason = null;
+
+      if (codomain !== 'R') {
+        if (domainType === 'interval' || domainType === 'R') {
+          if (fracA.num !== 0 || !isInCodomain(fracB, codomain)) {
+            invalidReason = `Tanım kümesi sürekli (${domainStr}) iken değer kümesi ayrık (${codomainLabel}) seçildiği için bazı reel sayıların görüntüsü ${codomainLabel} kümesinde bulunmaz!`;
+          }
+        } else {
+          const testXs = domainType === 'Z' ? [-2, -1, 0, 1, 2] :
+                         domainType === 'Z+' ? [1, 2, 3, 4] :
+                         domainType === 'Z-' ? [-4, -3, -2, -1] : [0, 1, 2, 3];
+          for (let tx of testXs) {
+            const fy = addFrac(mulFrac(fracA, makeFrac(tx, 1)), fracB);
+            if (!isInCodomain(fy, codomain)) {
+              invalidReason = `Tanım kümesindeki x = ${tx} elemanı için f(${tx}) = ${formatFrac(fy)} değeri değer kümesi olan ${codomainLabel} içinde yer almıyor!`;
+              break;
+            }
+          }
+        }
+      }
+
+      if (invalidReason) {
+        validityAlert.classList.remove('hidden');
+        validityMsg.innerText = invalidReason;
+      } else {
+        validityAlert.classList.add('hidden');
+      }
+
+      // 1. Görüntü Kümesi & 6. Maks-Min
+      let rangeStr = '';
+      let rangeNote = '';
+      let maxStr = '';
+      let minStr = '';
+
+      const fY1 = addFrac(mulFrac(fracA, fX1), fracB);
+      const fY2 = addFrac(mulFrac(fracA, fX2), fracB);
+
+      if (domainType === 'interval') {
+        rangeNote = 'Uç noktaların dahil ([ ]) veya hariç (( )) olma durumuna dikkat ediniz.';
+        if (fracA.val > 0) {
+          rangeStr = formatIntervalFrac(fY1, inc1, fY2, inc2);
+          maxStr = inc2 ? `${formatFrac(fY2, true)} (x = ${x2} için)` : `Yok (x = ${x2} açık uç)`;
+          minStr = inc1 ? `${formatFrac(fY1, true)} (x = ${x1} için)` : `Yok (x = ${x1} açık uç)`;
+        } else if (fracA.val < 0) {
+          rangeStr = formatIntervalFrac(fY2, inc2, fY1, inc1);
+          maxStr = inc1 ? `${formatFrac(fY1, true)} (x = ${x1} için)` : `Yok (x = ${x1} açık uç)`;
+          minStr = inc2 ? `${formatFrac(fY2, true)} (x = ${x2} için)` : `Yok (x = ${x2} açık uç)`;
+        } else {
+          rangeStr = `{${formatFrac(fracB)}}`;
+          maxStr = `${formatFrac(fracB, true)} (Sabit)`;
+          minStr = `${formatFrac(fracB, true)} (Sabit)`;
+        }
+      } else if (domainType === 'R') {
+        rangeNote = 'Tanım kümesi tüm reel sayılar (ℝ) olduğu için görüntü kümesi de ℝ olur (a ≠ 0).';
+        if (fracA.num !== 0) {
+          rangeStr = 'ℝ';
+          maxStr = "Yok (+∞'a gider)";
+          minStr = "Yok (−∞'a gider)";
+        } else {
+          rangeStr = `{${formatFrac(fracB)}}`;
+          maxStr = `${formatFrac(fracB, true)} (Sabit)`;
+          minStr = `${formatFrac(fracB, true)} (Sabit)`;
+        }
+      } else {
+        rangeNote = 'Ayrık sayı kümesi seçildiği için görüntü kümesi nokta elemanlardan oluşur.';
+        if (fracA.num === 0) {
+          rangeStr = `{${formatFrac(fracB)}}`;
+          maxStr = `${formatFrac(fracB, true)} (Sabit)`;
+          minStr = `${formatFrac(fracB, true)} (Sabit)`;
+        } else {
+          const sampleXs = domainType === 'Z' ? [-2, -1, 0, 1, 2] :
+                           domainType === 'Z+' ? [1, 2, 3, 4] :
+                           domainType === 'Z-' ? [-4, -3, -2, -1] : [0, 1, 2, 3];
+          const sampleYs = sampleXs.map(sx => formatFrac(addFrac(mulFrac(fracA, makeFrac(sx, 1)), fracB)));
+
+          if (domainType === 'Z') {
+            rangeStr = `{..., ${sampleYs.join(', ')}, ...}`;
+            maxStr = 'Yok (Sınırsız)';
+            minStr = 'Yok (Sınırsız)';
+          } else if (domainType === 'Z+') {
+            rangeStr = `{${sampleYs.join(', ')}, ...}`;
+            if (fracA.val > 0) {
+              minStr = `${sampleYs[0]} (x = 1 için)`;
+              maxStr = "Yok (+∞'a gider)";
+            } else {
+              maxStr = `${sampleYs[0]} (x = 1 için)`;
+              minStr = "Yok (−∞'a gider)";
+            }
+          } else if (domainType === 'N') {
+            rangeStr = `{${sampleYs.join(', ')}, ...}`;
+            if (fracA.val > 0) {
+              minStr = `${sampleYs[0]} (x = 0 için)`;
+              maxStr = "Yok (+∞'a gider)";
+            } else {
+              maxStr = `${sampleYs[0]} (x = 0 için)`;
+              minStr = "Yok (−∞'a gider)";
+            }
+          } else if (domainType === 'Z-') {
+            rangeStr = `{..., ${sampleYs.join(', ')}}`;
+            if (fracA.val > 0) {
+              maxStr = `${sampleYs[sampleYs.length - 1]} (x = -1 için)`;
+              minStr = "Yok (−∞'a gider)";
+            } else {
+              minStr = `${sampleYs[sampleYs.length - 1]} (x = -1 için)`;
+              maxStr = "Yok (+∞'a gider)";
+            }
+          }
+        }
+      }
+
+      document.getElementById('out-range').innerText = rangeStr;
+      document.getElementById('out-range-note').innerText = rangeNote;
+      document.getElementById('out-max').innerText = maxStr;
+      document.getElementById('out-min').innerText = minStr;
+
+      // 2. Fonksiyonun Sıfırı: x = -b / a
+      let zeroFrac = null;
+      let zeroInDomain = false;
+
+      const isValueInDomain = (fVal) => {
+        if (domainType === 'interval') {
+          const lOk = inc1 ? (fVal.val >= x1) : (fVal.val > x1);
+          const rOk = inc2 ? (fVal.val <= x2) : (fVal.val < x2);
+          return lOk && rOk;
+        }
+        if (domainType === 'R') return true;
+        if (fVal.den !== 1) return false;
+        if (domainType === 'Z') return true;
+        if (domainType === 'Z+') return fVal.num > 0;
+        if (domainType === 'Z-') return fVal.num < 0;
+        if (domainType === 'N') return fVal.num >= 0;
+        return false;
+      };
+
+      if (fracA.num !== 0) {
+        zeroFrac = divFrac(negFrac(fracB), fracA);
+        zeroInDomain = isValueInDomain(zeroFrac);
+      }
+
+      if (fracA.num === 0 && fracB.num === 0) {
+        document.getElementById('out-zero').innerText = `${domainStr} (Tüm tanım kümesi)`;
+        document.getElementById('out-zero-note').innerText = 'f(x) = 0 sıfır fonksiyonu olduğu için her noktada sıfırdır.';
+      } else if (zeroInDomain) {
+        document.getElementById('out-zero').innerText = `x = ${formatFrac(zeroFrac, true)}`;
+        document.getElementById('out-zero-note').innerText = `Grafik x-eksenini (${formatFrac(zeroFrac)}, 0) noktasında keser.`;
+      } else {
+        document.getElementById('out-zero').innerText = `Tanım kümesinde sıfırı yok`;
+        document.getElementById('out-zero-note').innerText = fracA.num === 0 ? 'Sabit fonksiyon x-eksenini kesmez.' : `Kök x = ${formatFrac(zeroFrac, true)} seçilen tanım kümesi (${domainStr}) içinde değildir.`;
+      }
+
+      // 3. Fonksiyonun İşareti
+      let posInt = 'Yok (∅)';
+      let negInt = 'Yok (∅)';
+
+      if (fracA.num === 0) {
+        if (fracB.val > 0) posInt = domainStr;
+        else if (fracB.val < 0) negInt = domainStr;
+      } else if (domainType === 'interval') {
+        if (fracA.val > 0) {
+          if (zeroFrac.val <= x1) posInt = (zeroFrac.val === x1) ? formatIntervalFrac(fX1, false, fX2, inc2) : domainStr;
+          else if (zeroFrac.val >= x2) negInt = (zeroFrac.val === x2) ? formatIntervalFrac(fX1, inc1, fX2, false) : domainStr;
+          else {
+            negInt = formatIntervalFrac(fX1, inc1, zeroFrac, false);
+            posInt = formatIntervalFrac(zeroFrac, false, fX2, inc2);
+          }
+        } else {
+          if (zeroFrac.val <= x1) negInt = (zeroFrac.val === x1) ? formatIntervalFrac(fX1, false, fX2, inc2) : domainStr;
+          else if (zeroFrac.val >= x2) posInt = (zeroFrac.val === x2) ? formatIntervalFrac(fX1, inc1, fX2, false) : domainStr;
+          else {
+            posInt = formatIntervalFrac(fX1, inc1, zeroFrac, false);
+            negInt = formatIntervalFrac(zeroFrac, false, fX2, inc2);
+          }
+        }
+      } else if (domainType === 'R') {
+        const zStr = formatFrac(zeroFrac);
+        if (fracA.val > 0) {
+          posInt = `(${zStr}, +∞)`;
+          negInt = `(-∞, ${zStr})`;
+        } else {
+          posInt = `(-∞, ${zStr})`;
+          negInt = `(${zStr}, +∞)`;
+        }
+      } else {
+        const zStr = formatFrac(zeroFrac);
+        if (fracA.val > 0) {
+          posInt = `{x ∈ ${domainStr} : x > ${zStr}}`;
+          negInt = `{x ∈ ${domainStr} : x < ${zStr}}`;
+          if (domainType === 'Z+' && zeroFrac.val < 1) { posInt = 'ℤ⁺'; negInt = 'Yok (∅)'; }
+          if (domainType === 'N' && zeroFrac.val < 0) { posInt = 'ℕ'; negInt = 'Yok (∅)'; }
+          if (domainType === 'Z-' && zeroFrac.val >= -1) { posInt = 'Yok (∅)'; negInt = zeroFrac.val === -1 ? 'ℤ⁻ \ {-1}' : 'ℤ⁻'; }
+        } else {
+          posInt = `{x ∈ ${domainStr} : x < ${zStr}}`;
+          negInt = `{x ∈ ${domainStr} : x > ${zStr}}`;
+          if (domainType === 'Z+' && zeroFrac.val <= 1) { posInt = 'Yok (∅)'; negInt = zeroFrac.val === 1 ? 'ℤ⁺ \ {1}' : 'ℤ⁺'; }
+          if (domainType === 'N' && zeroFrac.val <= 0) { posInt = 'Yok (∅)'; negInt = zeroFrac.val === 0 ? 'ℕ \ {0}' : 'ℕ'; }
+          if (domainType === 'Z-' && zeroFrac.val > -1) { posInt = 'ℤ⁻'; negInt = 'Yok (∅)'; }
+        }
+      }
+
+      document.getElementById('out-pos-int').innerText = posInt;
+      document.getElementById('out-neg-int').innerText = negInt;
+
+      // 4. Artan / Azalan Olma Durumu
+      const containerWord = domainType === 'interval' ? 'aralığında' : 'kümesinde';
+      let monoText = '';
+      let monoNote = '';
+      if (fracA.val > 0) {
+        monoText = `${domainStr} ${containerWord} Artandır`;
+        monoNote = `Eğim a = ${formatFrac(fracA)} > 0 olduğundan x değerleri arttıkça f(x) değerleri de artar.`;
+      } else if (fracA.val < 0) {
+        monoText = `${domainStr} ${containerWord} Azalandır`;
+        monoNote = `Eğim a = ${formatFrac(fracA)} < 0 olduğundan x değerleri arttıkça f(x) değerleri azalır.`;
+      } else {
+        monoText = `${domainStr} ${containerWord} Sabittir (Ne artan ne azalan)`;
+        monoNote = `Eğim a = 0 olduğundan x değiştikçe f(x) = ${formatFrac(fracB)} sabit kalır.`;
+      }
+      document.getElementById('out-mono').innerText = monoText;
+      document.getElementById('out-mono-note').innerText = monoNote;
+
+      // 5. Bire Birlik
+      let oneToOneText = '';
+      let oneToOneNote = '';
+      if (fracA.num !== 0) {
+        oneToOneText = `${domainStr} ${containerWord} Bire Birdir`;
+        oneToOneNote = `Doğrusal fonksiyon (a ≠ 0) tanım kümesindeki her farklı x için farklı bir f(x) üretir.`;
+      } else {
+        oneToOneText = `Hiçbir aralıkta/kümede Bire Bir Değildir`;
+        oneToOneNote = `Sabit fonksiyonda tüm elemanlar aynı görüntüye (${formatFrac(fracB)}) gittiği için bire bir değildir.`;
+      }
+      document.getElementById('out-onetoone').innerText = oneToOneText;
+      document.getElementById('out-onetoone-note').innerText = oneToOneNote;
+
+      if (interactionMode === 'quiz') {
+        buildQuizzes({ domainStr, rangeStr, posInt, negInt, monoText, oneToOneText, containerWord });
+      }
+
+      // Grafik Çizimi (Her zaman otomatik ve güncel)
+      const plotX1 = domainType === 'interval' ? x1 : -8;
+      const plotX2 = domainType === 'interval' ? x2 : 8;
+      drawGraph({
+        a: fracA.val,
+        b: fracB.val,
+        x1: plotX1,
+        x2: plotX2,
+        inc1: domainType === 'interval' ? inc1 : false,
+        inc2: domainType === 'interval' ? inc2 : false,
+        y1: fracA.val * plotX1 + fracB.val,
+        y2: fracA.val * plotX2 + fracB.val,
+        zeroX: zeroFrac ? zeroFrac.val : null,
+        zeroInDomain,
+        domainType
+      });
+    }
+
+    function buildQuizzes(data) {
+      const signContainer = document.getElementById('quiz-sign-options');
+      const signFb = document.getElementById('quiz-sign-fb');
+      signFb.classList.add('hidden');
+      signContainer.innerHTML = '';
+
+      const signChoices = Array.from(new Set([
+        data.posInt,
+        data.negInt,
+        data.domainStr,
+        'Yok (∅)',
+        'ℝ'
+      ])).slice(0, 4).sort(() => Math.random() - 0.5);
+
+      signChoices.forEach(choice => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'py-2 px-2 bg-white hover:bg-blue-50 border border-slate-300 rounded-lg text-[11px] font-extrabold text-slate-800 transition';
+        btn.innerText = choice;
+        btn.onclick = () => {
+          signFb.classList.remove('hidden');
+          if (choice === data.posInt) {
+            signFb.className = 'text-xs font-bold text-emerald-700 bg-emerald-50 p-2 rounded-lg border border-emerald-200';
+            signFb.innerText = `✓ Doğru! Grafik ${data.posInt} bölgesinde x-ekseninin üstünde (pozitif) yer alır.`;
+          } else {
+            signFb.className = 'text-xs font-bold text-rose-700 bg-rose-50 p-2 rounded-lg border border-rose-200';
+            signFb.innerText = `✗ Yanlış. Tanım kümesi (${data.domainStr}) ve kök noktasına dikkat et! Doğru cevap: ${data.posInt}`;
+          }
+        };
+        signContainer.appendChild(btn);
+      });
+
+      const monoContainer = document.getElementById('quiz-mono-options');
+      const monoFb = document.getElementById('quiz-mono-fb');
+      monoFb.classList.add('hidden');
+      monoContainer.innerHTML = '';
+
+      const monoChoices = [
+        `${data.domainStr} ${data.containerWord} Artandır`,
+        `${data.domainStr} ${data.containerWord} Azalandır`,
+        `${data.domainStr} ${data.containerWord} Sabittir (Ne artan ne azalan)`
+      ];
+
+      monoChoices.forEach(choice => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'py-1.5 px-3 bg-white hover:bg-sky-50 border border-slate-300 rounded-lg text-xs font-bold text-left text-slate-800 transition';
+        btn.innerText = choice;
+        btn.onclick = () => {
+          monoFb.classList.remove('hidden');
+          if (choice === data.monoText) {
+            monoFb.className = 'text-xs font-bold text-emerald-700 bg-emerald-50 p-2 rounded-lg border border-emerald-200';
+            monoFb.innerText = `✓ Tebrikler! Doğru aralığı/kümeyi ve davranışı buldun.`;
+          } else {
+            monoFb.className = 'text-xs font-bold text-rose-700 bg-rose-50 p-2 rounded-lg border border-rose-200';
+            monoFb.innerText = `✗ Yanlış. Eğimin işaretine ve tanım kümesine bak! Doğru: ${data.monoText}`;
+          }
+        };
+        monoContainer.appendChild(btn);
+      });
+
+      const otoContainer = document.getElementById('quiz-onetoone-options');
+      const otoFb = document.getElementById('quiz-onetoone-fb');
+      otoFb.classList.add('hidden');
+      otoContainer.innerHTML = '';
+
+      const otoChoices = [
+        `${data.domainStr} ${data.containerWord} Bire Birdir`,
+        `${data.rangeStr} kümesinde Bire Birdir`,
+        `Hiçbir aralıkta/kümede Bire Bir Değildir`
+      ];
+
+      otoChoices.forEach(choice => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'py-1.5 px-3 bg-white hover:bg-teal-50 border border-slate-300 rounded-lg text-xs font-bold text-left text-slate-800 transition';
+        btn.innerText = choice;
+        btn.onclick = () => {
+          otoFb.classList.remove('hidden');
+          if (choice === data.oneToOneText) {
+            otoFb.className = 'text-xs font-bold text-emerald-700 bg-emerald-50 p-2 rounded-lg border border-emerald-200';
+            otoFb.innerText = `✓ Doğru! Bire birlik tanım kümesi üzerinde tanımlanır.`;
+          } else {
+            otoFb.className = 'text-xs font-bold text-rose-700 bg-rose-50 p-2 rounded-lg border border-rose-200';
+            otoFb.innerText = `✗ Yanlış. Yatay doğru testini uygula ve tanım kümesini seç! Doğru: ${data.oneToOneText}`;
+          }
+        };
+        otoContainer.appendChild(btn);
+      });
+    }
+
+    function drawGraph({ a, b, x1, x2, inc1, inc2, y1, y2, zeroX, zeroInDomain, domainType }) {
+      const canvas = document.getElementById('graphCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width;
+      const H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+
+      const maxAbsY = Math.max(8, Math.abs(y1), Math.abs(y2));
+      const scaleX = (W - 60) / 18;
+      const scaleY = (H - 60) / (maxAbsY * 2.2);
+      const originX = W / 2;
+      const originY = H / 2;
+
+      const toPxX = (x) => originX + x * scaleX;
+      const toPxY = (y) => originY - y * scaleY;
+
+      // Arka plan ızgara
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 1;
+      for (let gx = -9; gx <= 9; gx++) {
+        ctx.beginPath();
+        ctx.moveTo(toPxX(gx), 10);
+        ctx.lineTo(toPxX(gx), H - 10);
+        ctx.stroke();
+      }
+      const stepY = maxAbsY > 18 ? 4 : maxAbsY > 10 ? 2 : 1;
+      for (let gy = -Math.ceil(maxAbsY); gy <= Math.ceil(maxAbsY); gy += stepY) {
+        ctx.beginPath();
+        ctx.moveTo(10, toPxY(gy));
+        ctx.lineTo(W - 10, toPxY(gy));
+        ctx.stroke();
+      }
+
+      // Sürekli aralıklarda (interval veya R) Tanım ve Görüntü gölgeleri
+      if (domainType === 'interval' || domainType === 'R') {
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.22)';
+        ctx.fillRect(toPxX(x1), originY - 5, toPxX(x2) - toPxX(x1), 10);
+
+        const minY = Math.min(y1, y2);
+        const maxY = Math.max(y1, y2);
+        ctx.fillStyle = 'rgba(147, 51, 234, 0.22)';
+        if (a === 0) {
+          ctx.fillRect(originX - 6, toPxY(b) - 3, 12, 6);
+        } else {
+          ctx.fillRect(originX - 5, toPxY(maxY), 10, toPxY(minY) - toPxY(maxY));
+        }
+      }
+
+      // Koordinat Eksenleri
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(10, originY);
+      ctx.lineTo(W - 10, originY);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(originX, 10);
+      ctx.lineTo(originX, H - 10);
+      ctx.stroke();
+
+      ctx.fillStyle = '#334155';
+      ctx.font = 'bold 12px Plus Jakarta Sans';
+      ctx.fillText('x', W - 20, originY - 8);
+      ctx.fillText('y', originX + 8, 22);
+
+      const isDiscrete = ['Z', 'Z+', 'Z-', 'N'].includes(domainType);
+
+      if (isDiscrete) {
+        // Ayrık kümeler için kılavuz çizgi
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(toPxX(-8), toPxY(a * -8 + b));
+        ctx.lineTo(toPxX(8), toPxY(a * 8 + b));
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Tam sayı noktalarını çiz
+        for (let ix = -8; ix <= 8; ix++) {
+          if (domainType === 'Z+' && ix <= 0) continue;
+          if (domainType === 'Z-' && ix >= 0) continue;
+          if (domainType === 'N' && ix < 0) continue;
+
+          const iy = a * ix + b;
+          const ptColor = iy > 0 ? '#10b981' : iy < 0 ? '#f43f5e' : '#f59e0b';
+
+          ctx.fillStyle = ptColor;
+          ctx.beginPath();
+          ctx.arc(toPxX(ix), toPxY(iy), 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+        document.getElementById('canvas-caption').innerHTML = 'Ayrık sayı kümesi seçildiği için grafik <b>noktalardan</b> oluşur (noktalar birleştirilmez).';
+      } else {
+        document.getElementById('canvas-caption').innerHTML = 'Mavi gölge <b>Tanım Kümesi</b>ni, mor gölge ise y-eksenindeki <b>Görüntü Kümesi</b>ni gösterir.';
+
+        if (domainType === 'interval') {
+          ctx.setLineDash([4, 4]);
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(toPxX(x1), originY);
+          ctx.lineTo(toPxX(x1), toPxY(y1));
+          ctx.lineTo(originX, toPxY(y1));
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(toPxX(x2), originY);
+          ctx.lineTo(toPxX(x2), toPxY(y2));
+          ctx.lineTo(originX, toPxY(y2));
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        const drawSegment = (xa, ya, xb, yb, color) => {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(toPxX(xa), toPxY(ya));
+          ctx.lineTo(toPxX(xb), toPxY(yb));
+          ctx.stroke();
+        };
+
+        if (a === 0) {
+          const col = b > 0 ? '#10b981' : b < 0 ? '#f43f5e' : '#f59e0b';
+          drawSegment(x1, y1, x2, y2, col);
+        } else if (zeroX !== null && zeroX > x1 && zeroX < x2) {
+          const col1 = y1 > 0 ? '#10b981' : '#f43f5e';
+          const col2 = y2 > 0 ? '#10b981' : '#f43f5e';
+          drawSegment(x1, y1, zeroX, 0, col1);
+          drawSegment(zeroX, 0, x2, y2, col2);
+        } else {
+          const midY = (y1 + y2) / 2;
+          const col = midY >= 0 ? '#10b981' : '#f43f5e';
+          drawSegment(x1, y1, x2, y2, col);
+        }
+
+        if (zeroInDomain && a !== 0 && zeroX !== null) {
+          ctx.fillStyle = '#f59e0b';
+          ctx.beginPath();
+          ctx.arc(toPxX(zeroX), originY, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+
+        if (domainType === 'interval') {
+          const drawEndpoint = (x, y, included) => {
+            ctx.beginPath();
+            ctx.arc(toPxX(x), toPxY(y), 6.5, 0, Math.PI * 2);
+            if (included) {
+              ctx.fillStyle = '#2563eb';
+              ctx.fill();
+              ctx.strokeStyle = '#ffffff';
+              ctx.lineWidth = 2;
+              ctx.stroke();
+            } else {
+              ctx.fillStyle = '#ffffff';
+              ctx.fill();
+              ctx.strokeStyle = '#2563eb';
+              ctx.lineWidth = 2.5;
+              ctx.stroke();
+            }
+          };
+
+          drawEndpoint(x1, y1, inc1);
+          drawEndpoint(x2, y2, inc2);
+
+          ctx.fillStyle = '#1e293b';
+          ctx.font = 'bold 11px Plus Jakarta Sans';
+          ctx.fillText(x1, toPxX(x1) - 6, originY + 16);
+          ctx.fillText(x2, toPxX(x2) - 4, originY + 16);
+        }
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', updateModel);
+    } else {
+      updateModel();
+    }
+  </script>
+</body>
+</html>

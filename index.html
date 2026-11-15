@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matematik Laboratuvarı</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%232563eb%22/%3E%3Ctext x=%2216%22 y=%2223%22 font-size=%2220%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22sans-serif%22%3E%E2%88%91%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --text: #0f172a;
+      --muted: #64748b;
+      --accent: #2563eb;
+      --accent-soft: #eff6ff;
+      --shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 4px 16px -4px rgba(15, 23, 42, .06);
+      --shadow-hover: 0 2px 4px rgba(15, 23, 42, .05), 0 12px 28px -8px rgba(15, 23, 42, .14);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1120;
+        --surface: #111827;
+        --border: #1f2937;
+        --border-strong: #334155;
+        --text: #f1f5f9;
+        --muted: #94a3b8;
+        --accent: #60a5fa;
+        --accent-soft: #172554;
+        --shadow: none;
+        --shadow-hover: 0 12px 28px -8px rgba(0, 0, 0, .5);
+      }
+    }
+    * { box-sizing: border-box; margin: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 48px 16px 64px; }
+
+    header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 32px; }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .logo {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: var(--accent); color: #fff;
+      display: grid; place-items: center;
+      font-weight: 800; font-size: 22px; font-style: italic;
+    }
+    h1 { font-size: 28px; font-weight: 800; letter-spacing: -.02em; line-height: 1.2; }
+    .sub { color: var(--muted); font-size: 14px; font-weight: 500; margin-top: 2px; }
+
+    .search {
+      width: 280px; max-width: 100%;
+      padding: 10px 14px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--surface); color: var(--text);
+      font: inherit; font-size: 14px;
+      transition: border-color .15s ease;
+    }
+    .search:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+
+    .card {
+      display: flex; flex-direction: column; gap: 16px;
+      padding: 20px; border-radius: 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      color: inherit; text-decoration: none;
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); border-color: var(--border-strong); }
+    .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .card-top { display: flex; align-items: center; gap: 12px; }
+    .badge {
+      flex: none; width: 40px; height: 40px; border-radius: 10px;
+      background: var(--accent-soft); color: var(--accent);
+      display: grid; place-items: center; font-weight: 800; font-size: 17px; text-transform: uppercase;
+    }
+    .card h2 { font-size: 16px; font-weight: 700; word-break: break-word; }
+    .card p { color: var(--muted); font-size: 13px; line-height: 1.5; flex: 1; }
+    .card-foot { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--muted); }
+    .open { color: var(--accent); font-weight: 600; }
+
+    .skeleton { height: 152px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); animation: pulse 1.4s ease-in-out infinite; }
+    @keyframes pulse { 50% { opacity: .5; } }
+    @media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } .card, .card:hover { transition: none; transform: none; } }
+
+    .empty { grid-column: 1 / -1; text-align: center; padding: 64px 16px; color: var(--muted); border: 1px dashed var(--border-strong); border-radius: 14px; }
+    .empty strong { display: block; color: var(--text); font-size: 16px; margin-bottom: 4px; }
+
+    footer { margin-top: 40px; font-size: 12px; color: var(--muted); text-align: center; }
+
+    @media (max-width: 560px) {
+      .wrap { padding-top: 32px; }
+      h1 { font-size: 22px; }
+      .search { width: 100%; }
+      header { align-items: stretch; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true">∑</div>
+        <div>
+          <h1>Matematik Laboratuvarı</h1>
+          <div class="sub" id="count">Projeler yükleniyor…</div>
+        </div>
+      </div>
+      <input class="search" id="search" type="search" placeholder="Proje ara…" aria-label="Proje ara">
+    </header>
+
+    <section class="grid" id="grid" aria-live="polite">
+      <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+    </section>
+
+    <footer>Yeni proje eklemek için <code>projects/</code> klasörüne bir HTML dosyası koyman yeterli.</footer>
+  </main>
+
+  <script>
+    const grid = document.getElementById('grid');
+    const countEl = document.getElementById('count');
+    const searchEl = document.getElementById('search');
+    let projects = [];
+
+    const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    // 1) GitHub Actions'ın ürettiği projects.json
+    async function fromManifest() {
+      const res = await fetch('projects.json', { cache: 'no-store' });
+      if (!res.ok) throw new Error('manifest yok');
+      return res.json();
+    }
+
+    // 2) Yedek: GitHub API ile klasörü listele (kullanıcı.github.io/repo adresinden çıkarılır)
+    async function fromGitHubApi() {
+      const owner = location.hostname.split('.')[0];
+      const repo = location.pathname.split('/').filter(Boolean)[0];
+      if (!location.hostname.endsWith('github.io') || !repo) throw new Error('GitHub Pages değil');
+      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/projects`);
+      if (!res.ok) throw new Error('API hatası');
+      const files = await res.json();
+      return files
+        .filter(f => f.type === 'file' && f.name.toLowerCase().endsWith('.html'))
+        .map(f => ({ file: f.name, name: f.name.replace(/\.html$/i, ''), title: '', updated: '' }));
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      return isNaN(d) ? '' : d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function render() {
+      const q = searchEl.value.trim().toLocaleLowerCase('tr');
+      const list = projects.filter(p => (p.name + ' ' + p.title).toLocaleLowerCase('tr').includes(q));
+
+      countEl.textContent = `${projects.length} proje`;
+
+      if (!projects.length) {
+        grid.innerHTML = `<div class="empty"><strong>Henüz proje yok</strong>projects/ klasörüne bir HTML dosyası ekle, burada otomatik görünsün.</div>`;
+        return;
+      }
+      if (!list.length) {
+        grid.innerHTML = `<div class="empty"><strong>“${esc(searchEl.value)}” için sonuç yok</strong>Farklı bir kelime dene.</div>`;
+        return;
+      }
+
+      grid.innerHTML = list.map(p => `
+        <a class="card" href="projects/${encodeURIComponent(p.file)}">
+          <div class="card-top">
+            <div class="badge" aria-hidden="true">${esc(p.name.charAt(0) || '?')}</div>
+            <h2>${esc(p.name)}</h2>
+          </div>
+          <p>${esc(p.title || 'İnteraktif matematik etkinliği')}</p>
+          <div class="card-foot">
+            <span>${esc(formatDate(p.updated))}</span>
+            <span class="open">Aç →</span>
+          </div>
+        </a>`).join('');
+    }
+
+    (async () => {
+      try {
+        projects = await fromManifest();
+      } catch {
+        try { projects = await fromGitHubApi(); }
+        catch {
+          countEl.textContent = 'Projeler yüklenemedi';
+          grid.innerHTML = `<div class="empty"><strong>Proje listesi alınamadı</strong>Sayfayı yenilemeyi dene. Sorun sürerse GitHub Actions çalışmasını kontrol et.</div>`;
+          return;
+        }
+      }
+      projects.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+      render();
+    })();
+
+    searchEl.addEventListener('input', render);
+  </script>
+</body>
+</html>
