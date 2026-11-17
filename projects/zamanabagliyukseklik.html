@@ -72,16 +72,14 @@
   }
   .icon-btn:hover { border-color: var(--accent); }
 
-  .layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(320px, 1fr); gap: 16px; }
-  .left { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 12px; }
-  .canvas-box { position: relative; width: 100%; }
-  .scene-box { aspect-ratio: 16 / 7; }
-  .graph-box { aspect-ratio: 16 / 8; }
+  .stage, .below { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+  .canvas-box { position: relative; width: 100%; aspect-ratio: 16 / 10; }
   canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; border-radius: 12px; }
-
-  .panel { display: flex; flex-direction: column; gap: 14px; }
-  .tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px; background: var(--surface-2); padding: 6px; border-radius: 14px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 12px; min-width: 0; }
+  .controls { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+  .params, .explain { padding: 16px; }
+  .tabs { display: flex; gap: 4px; background: var(--surface-2); padding: 5px; border-radius: 14px; overflow-x: auto; flex: 0 1 auto; min-width: 0; }
+  .tab { white-space: nowrap; }
   .tab {
     border: 0; background: transparent; padding: 10px 8px; border-radius: 10px; cursor: pointer;
     font-weight: 650; font-size: 14px; color: var(--muted);
@@ -125,7 +123,7 @@
   .check { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
   .check input { width: 18px; height: 18px; accent-color: var(--accent); }
 
-  .fn { display: flex; flex-direction: column; gap: 10px; background: var(--surface-2); border-radius: 14px; padding: 14px; }
+  .fn { display: flex; flex-direction: column; gap: 10px; padding: 16px; }
   .fn h2 { font-size: 14px; font-weight: 750; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
   .fn .hint { font-weight: 500; color: var(--muted); font-size: 12px; }
   .pw { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 650; font-variant-numeric: tabular-nums; }
@@ -145,9 +143,9 @@
   .explain li b { color: var(--text); }
 
   @media (max-width: 960px) {
-    .layout { grid-template-columns: 1fr; }
-    .scene-box { aspect-ratio: 16 / 9; }
-    .graph-box { aspect-ratio: 4 / 3; }
+    .stage, .below { grid-template-columns: 1fr; }
+    header { flex-wrap: wrap; }
+    .tabs { order: 3; width: 100%; }
   }
   @media (max-width: 480px) {
     .app { padding: 10px; }
@@ -160,59 +158,56 @@
   <header>
     <div class="brand">
       <div class="mark" aria-hidden="true">h(t)</div>
-      <div>
-        <h1>Zamana Bağlı Yükseklik</h1>
-        <div class="sub">Hareketi izle, yükseklik grafiğinin nasıl oluştuğunu gör.</div>
-      </div>
+      <h1>Zamana Bağlı Yükseklik</h1>
     </div>
+    <nav class="tabs" role="tablist" id="tabs" aria-label="Örnekler"></nav>
     <button class="icon-btn" id="themeBtn" aria-label="Tema değiştir" title="Tema değiştir">◐</button>
   </header>
 
-  <div class="layout">
-    <div class="left">
-      <div class="card"><div class="canvas-box scene-box"><canvas id="scene" aria-label="Hareket animasyonu"></canvas></div></div>
-      <div class="card"><div class="canvas-box graph-box"><canvas id="graph" aria-label="Yükseklik-zaman grafiği"></canvas></div></div>
+  <div class="stage">
+    <div class="card"><div class="canvas-box"><canvas id="scene" aria-label="Hareket animasyonu"></canvas></div></div>
+    <div class="card"><div class="canvas-box"><canvas id="graph" aria-label="Yükseklik-zaman grafiği"></canvas></div></div>
+  </div>
+
+  <div class="below">
+    <div class="card controls">
+      <div class="story" id="story"></div>
+      <div class="row">
+        <button class="btn primary" id="playBtn">▶ Başlat</button>
+        <button class="btn" id="resetBtn">↺ Başa al</button>
+        <div class="speed" role="group" aria-label="Animasyon hızı">
+          <button class="btn" data-speed="0.5" aria-pressed="false">0,5×</button>
+          <button class="btn" data-speed="1" aria-pressed="true">1×</button>
+          <button class="btn" data-speed="2" aria-pressed="false">2×</button>
+        </div>
+      </div>
+      <div class="time-row">
+        <input type="range" id="timeSlider" min="0" max="1000" value="0" aria-label="Zaman">
+        <output id="timeOut">t = 0 sn</output>
+      </div>
+      <div class="readouts">
+        <div class="ro"><span>Zaman</span><strong id="roT">0 sn</strong></div>
+        <div class="ro"><span>Yükseklik</span><strong id="roH">0 m</strong></div>
+        <div class="ro"><span>Dikey hız</span><strong id="roV">0 m/sn</strong></div>
+      </div>
+      <div class="row">
+        <div class="state" id="state">Hazır</div>
+        <label class="check"><input type="checkbox" id="fullCurve"> Grafiğin tamamını soluk göster</label>
+      </div>
     </div>
 
-    <aside class="card panel">
-      <div class="tabs" role="tablist" id="tabs"></div>
-      <div class="story" id="story"></div>
+    <div class="card fn">
+      <h2>Fonksiyon <span class="hint">x: zaman (sn), f(x): yükseklik (m)</span></h2>
+      <div id="fnPieces"></div>
+      <div id="fnSingles"></div>
+      <p class="fn-note" id="fnNote"></p>
+      <div class="table-wrap"><table class="vt" id="fnTable"></table></div>
+    </div>
+  </div>
 
-      <div class="controls">
-        <div class="row">
-          <button class="btn primary" id="playBtn">▶ Başlat</button>
-          <button class="btn" id="resetBtn">↺ Başa al</button>
-          <div class="speed" role="group" aria-label="Animasyon hızı">
-            <button class="btn" data-speed="0.5" aria-pressed="false">0,5×</button>
-            <button class="btn" data-speed="1" aria-pressed="true">1×</button>
-            <button class="btn" data-speed="2" aria-pressed="false">2×</button>
-          </div>
-        </div>
-        <div class="time-row">
-          <input type="range" id="timeSlider" min="0" max="1000" value="0" aria-label="Zaman">
-          <output id="timeOut">t = 0 sn</output>
-        </div>
-        <div class="readouts">
-          <div class="ro"><span>Zaman</span><strong id="roT">0 sn</strong></div>
-          <div class="ro"><span>Yükseklik</span><strong id="roH">0 m</strong></div>
-          <div class="ro"><span>Dikey hız</span><strong id="roV">0 m/sn</strong></div>
-        </div>
-        <div class="state" id="state">Hazır</div>
-      </div>
-
-      <div class="fn">
-        <h2>Fonksiyon <span class="hint">x: zaman (sn), f(x): yükseklik (m)</span></h2>
-        <div id="fnPieces"></div>
-        <div id="fnSingles"></div>
-        <p class="fn-note" id="fnNote"></p>
-        <div class="table-wrap"><table class="vt" id="fnTable"></table></div>
-      </div>
-
-      <div class="params" id="params"></div>
-      <label class="check"><input type="checkbox" id="fullCurve"> Grafiğin tamamını soluk göster</label>
-
-      <div class="explain"><h2>Grafikte ne görüyoruz?</h2><ul id="explain"></ul></div>
-    </aside>
+  <div class="below">
+    <div class="card params" id="params"></div>
+    <div class="card explain"><h2>Grafikte ne görüyoruz?</h2><ul id="explain"></ul></div>
   </div>
 </div>
 
@@ -837,7 +832,7 @@
       <tr><td>${num(t)}</td>${cols.map(c => `<td style="color:${c[2]}">${c[1]}</td>`).join('')}</tr>`;
   }
 
-  new ResizeObserver(() => draw()).observe(document.querySelector('.layout'));
+  new ResizeObserver(() => draw()).observe(document.querySelector('.stage'));
   setup();
 })();
 </script>
