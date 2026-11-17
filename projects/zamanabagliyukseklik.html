@@ -81,7 +81,7 @@
   canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; border-radius: 12px; }
 
   .panel { display: flex; flex-direction: column; gap: 14px; }
-  .tabs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; background: var(--surface-2); padding: 6px; border-radius: 14px; }
+  .tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px; background: var(--surface-2); padding: 6px; border-radius: 14px; }
   .tab {
     border: 0; background: transparent; padding: 10px 8px; border-radius: 10px; cursor: pointer;
     font-weight: 650; font-size: 14px; color: var(--muted);
@@ -391,6 +391,20 @@
     },
   ];
 
+  // Yük asansörü: cam asansörle aynı matematik, eğik ray üzerinde
+  SCENARIOS.unshift({
+    ...SCENARIOS[0],
+    id: 'yuk', name: 'Yük asansörü',
+    params: [
+      { key: 'H', label: 'Balkon yüksekliği', unit: 'm', min: 10, max: 60, step: 5, value: 30 },
+      { key: 'tu', label: 'Çıkış süresi', unit: 'sn', min: 4, max: 20, step: 1, value: 10 },
+      { key: 'tw', label: 'Balkonda bekleme', unit: 'sn', min: 0, max: 10, step: 1, value: 0 },
+      { key: 'td', label: 'İniş süresi', unit: 'sn', min: 4, max: 20, step: 1, value: 10 },
+    ],
+    story: p => `Yük asansörü kamyonun yanından harekete başlıyor, <b>${p.H} m</b> yükseklikteki balkona <b>${p.tu} sn</b>'de sabit hızla çıkıyor${p.tw ? `, eşyaları yüklerken <b>${p.tw} sn</b> bekliyor` : ', eşyaları alıyor (yükleme süresi ihmal)'} ve <b>${p.td} sn</b>'de başladığı noktaya dönüyor.`,
+    draw: drawLift,
+  });
+
   // ---------- Durum ----------
   let sc = SCENARIOS[0];
   const values = {};
@@ -542,6 +556,71 @@
     ctx.beginPath(); ctx.roundRect(sx + 3, cy - 30, sw - 6, 30, 4); ctx.fill(); ctx.globalAlpha = 1;
     ctx.fillStyle = '#fff'; ctx.fillRect(sx + 10, cy - 24, sw - 20, 12);
     heightMarker(ctx, sx + sw + 26, gy, cy, hh);
+  }
+
+  function drawBox(ctx, x, y, size) {
+    ctx.fillStyle = '#c99a62'; ctx.strokeStyle = '#8a6237'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(x, y, size, size, 2); ctx.fill(); ctx.stroke();
+  }
+  function boxStack(ctx, x, y) { // y: zemin çizgisi
+    drawBox(ctx, x, y - 13, 13); drawBox(ctx, x + 14, y - 13, 13); drawBox(ctx, x + 7, y - 26, 13);
+  }
+
+  function drawLift(ctx, w, h, p, t) {
+    sky(ctx, w, h);
+    const gy = h - 28; ground(ctx, w, h, gy);
+    const s = (gy - 64) / Math.max(p.H, 40);
+    const bx = w * .1, bw = Math.min(200, w * .2), bh = p.H * s;
+    // bina
+    ctx.fillStyle = css('--building'); ctx.fillRect(bx, gy - bh, bw, bh);
+    ctx.fillStyle = css('--window');
+    const rows = Math.max(1, Math.floor((bh - 8) / 30));
+    for (let r = 0; r < rows; r++) for (let c = 0; c < 3; c++) {
+      ctx.beginPath(); ctx.roundRect(bx + 10 + c * (bw / 3), gy - bh + 10 + r * 30, bw / 3 - 18, 18, 3); ctx.fill();
+    }
+    // balkon
+    const balX = bx + bw, balY = gy - bh;
+    ctx.fillStyle = css('--metal'); ctx.fillRect(balX, balY - 3, 34, 5);
+    ctx.strokeStyle = css('--metal'); ctx.lineWidth = 1.5;
+    ctx.strokeRect(balX + 2, balY - 22, 30, 19);
+    for (let i = 1; i < 4; i++) { ctx.beginPath(); ctx.moveTo(balX + 2 + i * 7.5, balY - 22); ctx.lineTo(balX + 2 + i * 7.5, balY - 3); ctx.stroke(); }
+    ctx.fillStyle = css('--ink'); ctx.font = '700 14px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText('Balkon', balX + 17, balY - 26);
+    // ölçü çizgisi
+    const mx = balX + 14;
+    ctx.strokeStyle = css('--ink'); ctx.setLineDash([4, 4]); ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(mx, balY + 2); ctx.lineTo(mx, gy); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = css('--ink'); ctx.font = '700 14px system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(`${p.H} m`, mx + 10, (balY + gy) / 2);
+    // kamyon
+    const tx = w * .7, tw = Math.min(220, w * .22);
+    ctx.fillStyle = '#e09a43';
+    ctx.beginPath(); ctx.roundRect(tx, gy - 42, tw * .75, 30, 4); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(tx + tw * .72, gy - 62, tw * .28, 50, 6); ctx.fill();
+    ctx.fillStyle = css('--window'); ctx.beginPath(); ctx.roundRect(tx + tw * .78, gy - 56, tw * .17, 14, 3); ctx.fill();
+    ctx.fillStyle = '#2b2f38';
+    [tx + tw * .15, tx + tw * .5, tx + tw * .87].forEach(x => { ctx.beginPath(); ctx.arc(x, gy - 10, 11, 0, Math.PI * 2); ctx.fill(); });
+    // ray
+    const x0 = tx - 50, y0 = gy - 4, x1 = balX + 40, y1 = balY;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = css('--metal'); ctx.lineWidth = 9;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 6]);
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle = css('--metal'); ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(tx, gy - 24); ctx.stroke();
+    // platform
+    const hh = sc.h(p, t), f = hh / p.H;
+    const px = x0 + (x1 - x0) * f, py = y0 + (y1 - y0) * f;
+    ctx.strokeStyle = css('--accent'); ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(px - 4, py - 16); ctx.lineTo(px - 4, py); ctx.lineTo(px + 46, py); ctx.lineTo(px + 46, py - 10); ctx.stroke();
+    ctx.lineCap = 'butt';
+    // kutular: balkonda bekler, platform tepeye varınca platforma geçer
+    const loaded = t >= p.tu - 1e-6;
+    if (loaded) boxStack(ctx, px + 6, py - 2); else boxStack(ctx, balX + 3, balY - 3);
+    // yükseklik etiketi
+    ctx.fillStyle = css('--warn'); ctx.font = '800 16px system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(`${fmt(hh)} m`, px + 56, py - 12);
   }
 
   function drawWheel(ctx, w, h, p, t) {
