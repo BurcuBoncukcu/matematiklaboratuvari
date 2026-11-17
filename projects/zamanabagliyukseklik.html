@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zamana Bağlı Yükseklik</title>
+<style>
+  :root {
+    --bg: #eef1f7;
+    --surface: #ffffff;
+    --surface-2: #f4f6fb;
+    --border: #e1e6ef;
+    --text: #0f172a;
+    --muted: #5d6779;
+    --accent: #3b4fd8;
+    --accent-soft: #e7eafe;
+    --curve: #3b4fd8;
+    --good: #16a34a;
+    --warn: #ea580c;
+    --sky: #dfe9fa;
+    --sky-2: #f1f5fd;
+    --ground: #c9ccd3;
+    --grid: #e7ebf2;
+    --axis: #64748b;
+    --ink: #1e293b;
+    --building: #dcd3c6;
+    --window: #93acd3;
+    --metal: #475569;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b1020;
+    --surface: #141b2e;
+    --surface-2: #1a2338;
+    --border: #26304a;
+    --text: #e8edf7;
+    --muted: #9aa6bd;
+    --accent: #7d8cff;
+    --accent-soft: #232c55;
+    --curve: #8e9bff;
+    --good: #4ade80;
+    --warn: #fb923c;
+    --sky: #17223a;
+    --sky-2: #1c2944;
+    --ground: #39404f;
+    --grid: #222c44;
+    --axis: #8592ab;
+    --ink: #e2e8f0;
+    --building: #4a4440;
+    --window: #4f6a96;
+    --metal: #94a3b8;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100dvh; -webkit-font-smoothing: antialiased;
+  }
+  button, input, select { font: inherit; color: inherit; }
+  .app { max-width: 1440px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+
+  header {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 12px 16px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .mark { width: 40px; height: 40px; border-radius: 12px; background: var(--accent); color: #fff; display: grid; place-items: center; font-weight: 800; }
+  h1 { font-size: 18px; font-weight: 750; letter-spacing: -.01em; }
+  .sub { font-size: 13px; color: var(--muted); }
+  .icon-btn {
+    width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--border);
+    background: var(--surface-2); cursor: pointer; font-size: 18px;
+  }
+  .icon-btn:hover { border-color: var(--accent); }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(320px, 1fr); gap: 16px; }
+  .left { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 12px; }
+  .canvas-box { position: relative; width: 100%; }
+  .scene-box { aspect-ratio: 16 / 7; }
+  .graph-box { aspect-ratio: 16 / 8; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; border-radius: 12px; }
+
+  .panel { display: flex; flex-direction: column; gap: 14px; }
+  .tabs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; background: var(--surface-2); padding: 6px; border-radius: 14px; }
+  .tab {
+    border: 0; background: transparent; padding: 10px 8px; border-radius: 10px; cursor: pointer;
+    font-weight: 650; font-size: 14px; color: var(--muted);
+  }
+  .tab[aria-selected="true"] { background: var(--surface); color: var(--accent); box-shadow: 0 1px 3px rgba(15,23,42,.1); }
+  .tab:focus-visible, .icon-btn:focus-visible, .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .story {
+    border-left: 4px solid var(--accent); background: var(--surface-2);
+    padding: 12px 14px; border-radius: 12px; font-size: 15px; line-height: 1.55;
+  }
+  .story b { color: var(--accent); }
+
+  .controls { display: flex; flex-direction: column; gap: 12px; }
+  .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    border: 1px solid var(--border); background: var(--surface-2); padding: 10px 16px; border-radius: 12px;
+    cursor: pointer; font-weight: 650; font-size: 14px; transition: transform .1s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; min-width: 140px; }
+  .speed { display: flex; gap: 4px; margin-left: auto; }
+  .speed .btn { padding: 8px 10px; font-size: 13px; }
+  .speed .btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+  .readouts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .ro { background: var(--surface-2); border-radius: 12px; padding: 10px 12px; }
+  .ro span { display: block; font-size: 12px; color: var(--muted); font-weight: 600; }
+  .ro strong { font-size: 20px; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .state { font-size: 14px; font-weight: 650; padding: 8px 12px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); }
+
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  .time-row { display: flex; align-items: center; gap: 10px; }
+  .time-row output { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--accent); min-width: 72px; text-align: right; }
+
+  .params { display: flex; flex-direction: column; gap: 12px; }
+  .params h2, .explain h2 { font-size: 14px; font-weight: 750; margin-bottom: 2px; }
+  .param label { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .param label output { color: var(--accent); font-variant-numeric: tabular-nums; }
+  .param select { width: 100%; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); }
+  .check { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .check input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+  .fn { display: flex; flex-direction: column; gap: 10px; background: var(--surface-2); border-radius: 14px; padding: 14px; }
+  .fn h2 { font-size: 14px; font-weight: 750; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .fn .hint { font-weight: 500; color: var(--muted); font-size: 12px; }
+  .pw { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .pw .brace { border-left: 2px solid var(--text); border-radius: 10px 0 0 10px; padding: 2px 0 2px 10px; display: grid; grid-template-columns: auto auto; gap: 4px 18px; }
+  .pw .cond { color: var(--muted); font-weight: 600; }
+  .pw .active { text-decoration: underline; text-underline-offset: 4px; }
+  .single { font-size: 16px; font-weight: 700; color: var(--accent); }
+  .single small { display: block; font-size: 12px; color: var(--muted); font-weight: 600; }
+  .fn-note { font-size: 13px; line-height: 1.5; color: var(--muted); }
+  .fn-note b { color: var(--text); }
+  .table-wrap { overflow-x: auto; }
+  .vt { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .vt th { text-align: left; font-weight: 700; padding: 6px 8px; background: var(--surface); }
+  .vt td { padding: 8px; font-weight: 600; white-space: nowrap; }
+  .vt th:first-child { border-radius: 8px 0 0 8px; } .vt th:last-child { border-radius: 0 8px 8px 0; }
+  .explain ul { padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; line-height: 1.5; color: var(--muted); }
+  .explain li b { color: var(--text); }
+
+  @media (max-width: 960px) {
+    .layout { grid-template-columns: 1fr; }
+    .scene-box { aspect-ratio: 16 / 9; }
+    .graph-box { aspect-ratio: 4 / 3; }
+  }
+  @media (max-width: 480px) {
+    .app { padding: 10px; }
+    .readouts strong { font-size: 17px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="mark" aria-hidden="true">h(t)</div>
+      <div>
+        <h1>Zamana Bağlı Yükseklik</h1>
+        <div class="sub">Hareketi izle, yükseklik grafiğinin nasıl oluştuğunu gör.</div>
+      </div>
+    </div>
+    <button class="icon-btn" id="themeBtn" aria-label="Tema değiştir" title="Tema değiştir">◐</button>
+  </header>
+
+  <div class="layout">
+    <div class="left">
+      <div class="card"><div class="canvas-box scene-box"><canvas id="scene" aria-label="Hareket animasyonu"></canvas></div></div>
+      <div class="card"><div class="canvas-box graph-box"><canvas id="graph" aria-label="Yükseklik-zaman grafiği"></canvas></div></div>
+    </div>
+
+    <aside class="card panel">
+      <div class="tabs" role="tablist" id="tabs"></div>
+      <div class="story" id="story"></div>
+
+      <div class="controls">
+        <div class="row">
+          <button class="btn primary" id="playBtn">▶ Başlat</button>
+          <button class="btn" id="resetBtn">↺ Başa al</button>
+          <div class="speed" role="group" aria-label="Animasyon hızı">
+            <button class="btn" data-speed="0.5" aria-pressed="false">0,5×</button>
+            <button class="btn" data-speed="1" aria-pressed="true">1×</button>
+            <button class="btn" data-speed="2" aria-pressed="false">2×</button>
+          </div>
+        </div>
+        <div class="time-row">
+          <input type="range" id="timeSlider" min="0" max="1000" value="0" aria-label="Zaman">
+          <output id="timeOut">t = 0 sn</output>
+        </div>
+        <div class="readouts">
+          <div class="ro"><span>Zaman</span><strong id="roT">0 sn</strong></div>
+          <div class="ro"><span>Yükseklik</span><strong id="roH">0 m</strong></div>
+          <div class="ro"><span>Hız</span><strong id="roV">0 m/sn</strong></div>
+        </div>
+        <div class="state" id="state">Hazır</div>
+      </div>
+
+      <div class="fn">
+        <h2>Fonksiyon <span class="hint">x: zaman (sn), f(x): yükseklik (m)</span></h2>
+        <div id="fnPieces"></div>
+        <div id="fnSingles"></div>
+        <p class="fn-note" id="fnNote"></p>
+        <div class="table-wrap"><table class="vt" id="fnTable"></table></div>
+      </div>
+
+      <div class="params" id="params"></div>
+      <label class="check"><input type="checkbox" id="fullCurve"> Grafiğin tamamını soluk göster</label>
+
+      <div class="explain"><h2>Grafikte ne görüyoruz?</h2><ul id="explain"></ul></div>
+    </aside>
+  </div>
+</div>
+
+<script>
+(() => {
+  const fmt = (x, d = 1) => (Math.round(x * 10 ** d) / 10 ** d).toLocaleString('tr-TR');
+  const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const num = x => fmt(Math.abs(x) < 1e-9 ? 0 : x, 2);
+  const PIECE_COLORS = ['--good', '--warn', '--curve'];
+
+  // Doğrusal ifade: a·x + b
+  function lin(a, b) {
+    let s = '';
+    if (Math.abs(a) > 1e-9) s = (a < 0 ? '−' : '') + (Math.abs(Math.abs(a) - 1) < 1e-9 ? '' : num(Math.abs(a))) + 'x';
+    if (Math.abs(b) > 1e-9 || !s) s += s ? (b < 0 ? ' − ' : ' + ') + num(Math.abs(b)) : (b < 0 ? '−' : '') + num(Math.abs(b));
+    return s;
+  }
+  function linSub(a, b, x) {
+    if (Math.abs(a) < 1e-9) return `${num(b)}`;
+    let s = `${a < 0 ? '−' : ''}${num(Math.abs(a))} · ${num(x)}`;
+    if (Math.abs(b) > 1e-9) s += (b < 0 ? ' − ' : ' + ') + num(Math.abs(b));
+    return `${s} = ${num(a * x + b)}`;
+  }
+  function linPiece(a, b, from, to, last) {
+    return { from, to, expr: lin(a, b), cond: `${num(from)} ≤ x ${last ? '≤' : '<'} ${num(to)}`, sub: x => linSub(a, b, x) };
+  }
+
+  // ---------- Senaryolar ----------
+  const SCENARIOS = [
+    {
+      id: 'asansor', name: 'Cam asansör',
+      params: [
+        { key: 'H', label: 'Teras yüksekliği', unit: 'm', min: 10, max: 60, step: 5, value: 30 },
+        { key: 'tu', label: 'Çıkış süresi', unit: 'sn', min: 4, max: 20, step: 1, value: 10 },
+        { key: 'tw', label: 'Terasta bekleme', unit: 'sn', min: 0, max: 10, step: 1, value: 4 },
+        { key: 'td', label: 'İniş süresi', unit: 'sn', min: 4, max: 20, step: 1, value: 8 },
+      ],
+      duration: p => p.tu + p.tw + p.td,
+      h: (p, t) => t <= p.tu ? p.H * t / p.tu : t <= p.tu + p.tw ? p.H : Math.max(0, p.H * (1 - (t - p.tu - p.tw) / p.td)),
+      hMax: p => p.H,
+      keys: p => [[0, 0], [p.tu, p.H], [p.tu + p.tw, p.H], [p.tu + p.tw + p.td, 0]],
+      story: p => `Cam asansör zeminden <b>${p.H} m</b> yükseklikteki terasa <b>${p.tu} sn</b>'de sabit hızla çıkıyor, terasta <b>${p.tw} sn</b> bekliyor ve <b>${p.td} sn</b>'de zemine iniyor.`,
+      explain: p => [
+        `<b>Çıkış:</b> yükseklik düzgün artar, grafik <b>artan bir doğru</b>. Eğim = ${p.H} ÷ ${p.tu} = ${fmt(p.H / p.tu)} m/sn.`,
+        p.tw > 0 ? `<b>Bekleme:</b> yükseklik değişmez, grafik <b>yatay bir doğru</b> (y = ${p.H}).` : `<b>Bekleme yok:</b> grafik tepede sivri bir köşe yapar.`,
+        `<b>İniş:</b> yükseklik düzgün azalır, grafik <b>azalan bir doğru</b>. Hız ${fmt(p.H / p.td)} m/sn.`,
+        `Daha hızlı hareket = daha <b>dik</b> doğru. Süreleri değiştirip eğimlere bak.`,
+      ],
+      formula: p => {
+        const T = p.tu + p.tw + p.td, pieces = [linPiece(p.H / p.tu, 0, 0, p.tu)];
+        if (p.tw > 0) pieces.push(linPiece(0, p.H, p.tu, p.tu + p.tw));
+        pieces.push(linPiece(-p.H / p.td, p.H * T / p.td, p.tu + p.tw, T, true));
+        const k = p.H / p.tu;
+        const singles = p.tw === 0 && p.tu === p.td ? [{
+          name: 'Mutlak değer',
+          expr: `${p.H} − ${num(k)}|x − ${p.tu}|`,
+          sub: x => `${p.H} − ${num(k)} · |${num(x)} − ${p.tu}| = ${num(p.H - k * Math.abs(x - p.tu))}`,
+        }] : [];
+        const note = singles.length
+          ? `Çıkış ve iniş eğimleri eşit (${num(k)} ve −${num(k)}) olduğu için grafik tek bir <b>mutlak değer</b> ifadesiyle de yazılabilir.`
+          : `${p.tw > 0 ? 'Bekleme parçası var' : 'Çıkış ve iniş eğimleri farklı'}, bu yüzden tek bir mutlak değer ifadesiyle yazılamaz. <b>Bekleme 0</b> ve <b>çıkış süresi = iniş süresi</b> yap, tek ifade görünsün.`;
+        return { pieces, singles, note };
+      },
+      draw: drawElevator,
+    },
+    {
+      id: 'dolap', name: 'Dönme dolap',
+      params: [
+        { key: 'R', label: 'Yarıçap', unit: 'm', min: 5, max: 30, step: 1, value: 15 },
+        { key: 'P', label: 'Bir tur süresi', unit: 'sn', min: 10, max: 60, step: 2, value: 24 },
+        { key: 'n', label: 'Tur sayısı', unit: 'tur', min: 1, max: 3, step: 1, value: 2 },
+      ],
+      base: 2,
+      duration: p => p.P * p.n,
+      h: (p, t) => 2 + p.R - p.R * Math.cos(2 * Math.PI * t / p.P),
+      hMax: p => 2 + 2 * p.R,
+      keys: p => {
+        const k = [];
+        for (let i = 0; i <= p.n * 2; i++) k.push([i * p.P / 2, i % 2 ? 2 + 2 * p.R : 2]);
+        return k;
+      },
+      story: p => `Mavi kabin dönme dolabın en altından (yerden <b>2 m</b>) biniyor. Dolabın yarıçapı <b>${p.R} m</b>, bir turu <b>${p.P} sn</b> sürüyor ve <b>${p.n}</b> tur dönüyor.`,
+      explain: p => [
+        `En düşük yükseklik <b>2 m</b>, en yüksek <b>${2 + 2 * p.R} m</b> (2 + 2 × ${p.R}).`,
+        `Grafik <b>dalga</b> şeklindedir ve her <b>${p.P} sn</b>'de kendini tekrar eder (periyodik).`,
+        `Kabin en altta ve en üstte yavaşlar gibi görünür: grafik orada <b>yataylaşır</b>. Ortalarda yükseklik en hızlı değişir.`,
+        `Yarıçapı büyüt: dalga <b>uzar</b>. Tur süresini kısalt: dalgalar <b>sıklaşır</b>.`,
+      ],
+      formula: p => ({
+        pieces: [],
+        singles: [{
+          name: 'Tek ifade',
+          expr: `${2 + p.R} − ${p.R} · cos(360° · x / ${p.P})`,
+          sub: x => `${2 + p.R} − ${p.R} · cos(${num(360 * x / p.P)}°) = ${num(2 + p.R - p.R * Math.cos(2 * Math.PI * x / p.P))}`,
+        }],
+        note: `Dönen bir noktanın yüksekliği <b>kosinüs</b> ile yazılır. ${2 + p.R} dolabın merkez yüksekliği, ${p.R} yarıçap. Açı her ${p.P} sn'de 360° artar.`,
+      }),
+      draw: drawWheel,
+    },
+    {
+      id: 'top', name: 'Yukarı atılan top',
+      params: [
+        { key: 'v0', label: 'Atış hızı', unit: 'm/sn', min: 5, max: 30, step: 1, value: 15 },
+        { key: 'h0', label: 'Atış yüksekliği', unit: 'm', min: 0, max: 20, step: 1, value: 2 },
+        { key: 'g', label: 'Yer çekimi', type: 'select', value: 9.8, options: [[9.8, 'Dünya (9,8 m/sn²)'], [3.7, 'Mars (3,7 m/sn²)'], [1.6, 'Ay (1,6 m/sn²)']] },
+      ],
+      duration: p => (p.v0 + Math.sqrt(p.v0 * p.v0 + 2 * p.g * p.h0)) / p.g,
+      h: (p, t) => Math.max(0, p.h0 + p.v0 * t - p.g * t * t / 2),
+      hMax: p => p.h0 + p.v0 * p.v0 / (2 * p.g),
+      keys: p => {
+        const tt = p.v0 / p.g;
+        return [[0, p.h0], [tt, p.h0 + p.v0 * p.v0 / (2 * p.g)], [(p.v0 + Math.sqrt(p.v0 * p.v0 + 2 * p.g * p.h0)) / p.g, 0]];
+      },
+      story: p => `Top <b>${p.h0} m</b> yükseklikten <b>${p.v0} m/sn</b> hızla dik olarak yukarı atılıyor. Yer çekimi onu yavaşlatıyor, durduruyor ve geri düşürüyor.`,
+      explain: p => {
+        const tt = p.v0 / p.g;
+        return [
+          `Grafik bir <b>parabol</b>: yükseklik önce artar, sonra azalır.`,
+          `Tepe noktası: <b>${fmt(tt)} sn</b>'de <b>${fmt(p.h0 + p.v0 * p.v0 / (2 * p.g))} m</b>. Bu anda top bir an <b>durur</b> (hız 0).`,
+          `Sahnedeki soluk noktalar her 0,5 sn'deki konumu gösterir: tepeye yaklaştıkça <b>sıklaşır</b>, top yavaşlar.`,
+          `Ay'ı seç: aynı atışla top çok daha yükseğe çıkar ve havada daha uzun kalır.`,
+        ];
+      },
+      formula: p => {
+        const a = p.g / 2, tt = p.v0 / p.g, hm = p.h0 + p.v0 * p.v0 / (2 * p.g);
+        const std = (p.h0 ? `${p.h0} + ` : '') + `${p.v0}x − ${num(a)}x²`;
+        return {
+          pieces: [],
+          singles: [
+            { name: 'Genel form', expr: std, sub: x => `${p.h0 ? p.h0 + ' + ' : ''}${p.v0} · ${num(x)} − ${num(a)} · ${num(x)}² = ${num(p.h0 + p.v0 * x - a * x * x)}` },
+            { name: 'Tepe noktası formu', expr: `${num(hm)} − ${num(a)}(x − ${num(tt)})²`, sub: x => `${num(hm)} − ${num(a)} · (${num(x)} − ${num(tt)})² = ${num(hm - a * (x - tt) ** 2)}` },
+          ],
+          note: `İkinci dereceden fonksiyon. x² katsayısı −g/2 = −${num(a)} (negatif, kollar aşağı). Tepe noktası (${num(tt)}, ${num(hm)}): iki ifade aynı değeri verir.`,
+        };
+      },
+      draw: drawBall,
+    },
+    {
+      id: 'parasut', name: 'Paraşütçü',
+      params: [
+        { key: 'H0', label: 'Atlama yüksekliği', unit: 'm', min: 1000, max: 4000, step: 100, value: 3000 },
+        { key: 'Hp', label: 'Paraşüt açılma yüksekliği', unit: 'm', min: 300, max: 1500, step: 100, value: 1000 },
+        { key: 'v1', label: 'Serbest düşüş hızı', unit: 'm/sn', min: 30, max: 60, step: 5, value: 50 },
+        { key: 'v2', label: 'Paraşütle iniş hızı', unit: 'm/sn', min: 3, max: 10, step: 1, value: 5 },
+      ],
+      fix: p => { if (p.Hp >= p.H0) p.Hp = p.H0 - 100; },
+      duration: p => (p.H0 - p.Hp) / p.v1 + p.Hp / p.v2,
+      h: (p, t) => {
+        const t1 = (p.H0 - p.Hp) / p.v1;
+        return t <= t1 ? p.H0 - p.v1 * t : Math.max(0, p.Hp - p.v2 * (t - t1));
+      },
+      hMax: p => p.H0,
+      keys: p => {
+        const t1 = (p.H0 - p.Hp) / p.v1;
+        return [[0, p.H0], [t1, p.Hp], [t1 + p.Hp / p.v2, 0]];
+      },
+      story: p => `Paraşütçü <b>${p.H0} m</b>'den atlıyor ve <b>${p.v1} m/sn</b> sabit hızla düşüyor. <b>${p.Hp} m</b>'de paraşütü açılıyor ve <b>${p.v2} m/sn</b> hızla yere iniyor.`,
+      explain: p => {
+        const t1 = (p.H0 - p.Hp) / p.v1;
+        return [
+          `Grafik iki parçalı <b>azalan</b> bir doğrudur. Kırılma noktası paraşütün açıldığı an: <b>(${fmt(t1)} sn, ${p.Hp} m)</b>.`,
+          `Serbest düşüşte doğru çok <b>dik</b> (hızlı), paraşütle iniş çok <b>yatık</b> (yavaş).`,
+          `Serbest düşüş ${fmt(t1)} sn sürer, paraşütle iniş ${fmt(p.Hp / p.v2)} sn. Yavaş kısım daha uzun sürer.`,
+          `Not: Gerçekte düşüş hızı önce artar. Burada hızlar sabit kabul edildi.`,
+        ];
+      },
+      formula: p => {
+        const t1 = (p.H0 - p.Hp) / p.v1, T = t1 + p.Hp / p.v2;
+        return {
+          pieces: [linPiece(-p.v1, p.H0, 0, t1), linPiece(-p.v2, p.Hp + p.v2 * t1, t1, T, true)],
+          singles: [],
+          note: `İki parçanın eğimi farklı (−${p.v1} ve −${p.v2}). Tek bir doğru ile yazılamaz, <b>parçalı fonksiyon</b> gerekir.`,
+        };
+      },
+      draw: drawParachute,
+    },
+  ];
+
+  // ---------- Durum ----------
+  let sc = SCENARIOS[0];
+  const values = {};
+  SCENARIOS.forEach(s => { values[s.id] = Object.fromEntries(s.params.map(q => [q.key, q.value])); });
+  let t = 0, playing = false, speed = 1, last = 0;
+
+  const $ = id => document.getElementById(id);
+  const sceneCv = $('scene'), graphCv = $('graph');
+  const sctx = sceneCv.getContext('2d'), gctx = graphCv.getContext('2d');
+
+  const P = () => { const p = { ...values[sc.id] }; sc.fix && sc.fix(p); return p; };
+
+  // ---------- Arayüz ----------
+  function buildTabs() {
+    $('tabs').innerHTML = SCENARIOS.map(s => `<button class="tab" role="tab" data-id="${s.id}" aria-selected="${s === sc}">${s.name}</button>`).join('');
+    $('tabs').querySelectorAll('.tab').forEach(b => b.onclick = () => { sc = SCENARIOS.find(s => s.id === b.dataset.id); setup(); });
+  }
+
+  function buildParams() {
+    const v = values[sc.id];
+    $('params').innerHTML = '<h2>Değerleri ayarla</h2>' + sc.params.map(q => q.type === 'select'
+      ? `<div class="param"><label for="p_${q.key}">${q.label}</label><select id="p_${q.key}">${q.options.map(([val, txt]) => `<option value="${val}" ${val == v[q.key] ? 'selected' : ''}>${txt}</option>`).join('')}</select></div>`
+      : `<div class="param"><label for="p_${q.key}">${q.label}<output id="o_${q.key}">${fmt(v[q.key])} ${q.unit}</output></label><input type="range" id="p_${q.key}" min="${q.min}" max="${q.max}" step="${q.step}" value="${v[q.key]}"></div>`
+    ).join('');
+    sc.params.forEach(q => {
+      const el = $('p_' + q.key);
+      el.addEventListener('input', () => {
+        v[q.key] = parseFloat(el.value);
+        if (q.unit) $('o_' + q.key).textContent = `${fmt(v[q.key])} ${q.unit}`;
+        t = Math.min(t, sc.duration(P()));
+        updateText(); draw();
+      });
+    });
+  }
+
+  function updateText() {
+    const p = P();
+    $('story').innerHTML = sc.story(p);
+    $('explain').innerHTML = sc.explain(p).map(x => `<li>${x}</li>`).join('');
+  }
+
+  function setup() {
+    playing = false; t = 0;
+    buildTabs(); buildParams(); updateText(); draw();
+  }
+
+  $('playBtn').onclick = () => {
+    const T = sc.duration(P());
+    if (!playing && t >= T - 1e-6) t = 0;
+    playing = !playing; last = performance.now();
+    if (playing) requestAnimationFrame(loop);
+    draw();
+  };
+  $('resetBtn').onclick = () => { playing = false; t = 0; draw(); };
+  document.querySelectorAll('[data-speed]').forEach(b => b.onclick = () => {
+    speed = parseFloat(b.dataset.speed);
+    document.querySelectorAll('[data-speed]').forEach(x => x.setAttribute('aria-pressed', x === b));
+  });
+  $('timeSlider').addEventListener('input', e => { playing = false; t = sc.duration(P()) * e.target.value / 1000; draw(); });
+  $('fullCurve').addEventListener('change', draw);
+  $('themeBtn').onclick = () => {
+    const root = document.documentElement;
+    root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    try { localStorage.setItem('hz-theme', root.dataset.theme); } catch {}
+    draw();
+  };
+  try {
+    const saved = localStorage.getItem('hz-theme');
+    if (saved) document.documentElement.dataset.theme = saved;
+    else if (matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.dataset.theme = 'dark';
+  } catch {}
+
+  function loop(now) {
+    if (!playing) return;
+    const dt = Math.min(0.1, (now - last) / 1000); last = now;
+    const T = sc.duration(P());
+    t += dt * speed;
+    if (t >= T) { t = T; playing = false; }
+    draw();
+    if (playing) requestAnimationFrame(loop);
+  }
+
+  // ---------- Çizim yardımcıları ----------
+  function fit(cv, ctx) {
+    const r = cv.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+    const w = Math.round(r.width * d), h = Math.round(r.height * d);
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+    ctx.setTransform(d, 0, 0, d, 0, 0);
+    return [r.width, r.height];
+  }
+  function niceStep(range, target = 5) {
+    const raw = range / target, mag = 10 ** Math.floor(Math.log10(raw)), n = raw / mag;
+    return (n < 1.5 ? 1 : n < 3 ? 2 : n < 7 ? 5 : 10) * mag;
+  }
+  function arrowLine(ctx, x1, y1, x2, y2) {
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    const a = Math.atan2(y2 - y1, x2 - x1);
+    ctx.beginPath(); ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - 9 * Math.cos(a - .4), y2 - 9 * Math.sin(a - .4));
+    ctx.lineTo(x2 - 9 * Math.cos(a + .4), y2 - 9 * Math.sin(a + .4));
+    ctx.closePath(); ctx.fill();
+  }
+  function pill(ctx, text, x, y, bg, fg, align = 'left') {
+    ctx.font = '600 13px system-ui, sans-serif';
+    const w = ctx.measureText(text).width + 14;
+    const x0 = align === 'right' ? x - w : align === 'center' ? x - w / 2 : x;
+    ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(x0, y - 12, w, 24, 8); ctx.fill();
+    ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(text, x0 + 7, y + 1);
+  }
+  function heightMarker(ctx, x, yGround, yObj, h) {
+    ctx.save();
+    ctx.strokeStyle = css('--accent'); ctx.fillStyle = css('--accent'); ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(x, yGround); ctx.lineTo(x, yObj); ctx.stroke();
+    ctx.setLineDash([]);
+    pill(ctx, `${fmt(h)} m`, x + 8, (yGround + yObj) / 2, css('--accent'), '#fff');
+    ctx.restore();
+  }
+  function sky(ctx, w, h) {
+    const g = ctx.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, css('--sky')); g.addColorStop(1, css('--sky-2'));
+    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+  }
+  function ground(ctx, w, h, gy) { ctx.fillStyle = css('--ground'); ctx.fillRect(0, gy, w, h - gy); }
+
+  // ---------- Sahneler ----------
+  function drawElevator(ctx, w, h, p, t) {
+    sky(ctx, w, h);
+    const gy = h - 28; ground(ctx, w, h, gy);
+    const s = (gy - 50) / 60;
+    const bx = w * .3, bw = Math.min(220, w * .25), bh = p.H * s;
+    // bina
+    ctx.fillStyle = css('--building'); ctx.fillRect(bx, gy - bh, bw, bh);
+    ctx.fillStyle = css('--window');
+    const rows = Math.max(1, Math.floor(bh / 34)), cols = 3;
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      const ww = bw / cols - 18;
+      ctx.fillRect(bx + 10 + c * (bw / cols), gy - bh + 10 + r * 34, ww, 20);
+    }
+    // teras
+    ctx.fillStyle = css('--metal'); ctx.fillRect(bx - 6, gy - bh - 4, bw + 70, 5);
+    ctx.fillStyle = css('--ink'); ctx.font = '700 14px system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillText(`Teras  ${p.H} m`, bx, gy - bh - 10);
+    // asansör kuyusu
+    const sx = bx + bw + 14, sw = 44;
+    ctx.strokeStyle = css('--metal'); ctx.lineWidth = 2;
+    ctx.strokeRect(sx, gy - bh, sw, bh);
+    const hh = sc.h(p, t), cy = gy - hh * s;
+    ctx.fillStyle = css('--accent'); ctx.globalAlpha = .9;
+    ctx.beginPath(); ctx.roundRect(sx + 3, cy - 30, sw - 6, 30, 4); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.fillStyle = '#fff'; ctx.fillRect(sx + 10, cy - 24, sw - 20, 12);
+    heightMarker(ctx, sx + sw + 26, gy, cy, hh);
+  }
+
+  function drawWheel(ctx, w, h, p, t) {
+    sky(ctx, w, h);
+    const gy = h - 28; ground(ctx, w, h, gy);
+    const s = (gy - 24) / 64;
+    const R = p.R * s, cx = w * .45, cy = gy - (2 + p.R) * s;
+    // ayaklar
+    ctx.strokeStyle = css('--metal'); ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(cx - R * .55 - 10, gy); ctx.lineTo(cx, cy); ctx.lineTo(cx + R * .55 + 10, gy); ctx.stroke();
+    // çember ve kollar
+    const ang = 2 * Math.PI * t / p.P;
+    ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
+    const N = 10;
+    ctx.lineWidth = 1.2;
+    for (let i = 0; i < N; i++) {
+      const a = ang + i * 2 * Math.PI / N;
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + R * Math.sin(a), cy + R * Math.cos(a)); ctx.stroke();
+    }
+    for (let i = N - 1; i >= 0; i--) {
+      const a = ang + i * 2 * Math.PI / N, x = cx + R * Math.sin(a), y = cy + R * Math.cos(a);
+      ctx.fillStyle = i === 0 ? css('--accent') : css('--window');
+      ctx.beginPath(); ctx.roundRect(x - 9, y - 4, 18, 14, 4); ctx.fill();
+    }
+    ctx.fillStyle = css('--metal'); ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.fill();
+    // biniş platformu
+    ctx.fillRect(cx - 30, gy - 2 * s, 60, 2 * s);
+    const hh = sc.h(p, t), x0 = cx + R * Math.sin(ang), y0 = gy - hh * s;
+    heightMarker(ctx, Math.max(x0, cx + R) + 30, gy, y0, hh);
+    ctx.strokeStyle = css('--accent'); ctx.setLineDash([2, 3]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x0 + 10, y0); ctx.lineTo(Math.max(x0, cx + R) + 30, y0); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  function drawBall(ctx, w, h, p, t) {
+    sky(ctx, w, h);
+    const gy = h - 28; ground(ctx, w, h, gy);
+    const top = sc.hMax(p);
+    const s = (gy - 30) / (top * 1.08);
+    const cx = w * .45;
+    // platform
+    if (p.h0 > 0) {
+      ctx.fillStyle = css('--building'); ctx.fillRect(cx - 50, gy - p.h0 * s, 70, p.h0 * s);
+    }
+    // kişi
+    const py = gy - p.h0 * s;
+    ctx.strokeStyle = css('--ink'); ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(cx - 22, py - 38, 6, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - 22, py - 32); ctx.lineTo(cx - 22, py - 14);
+    ctx.lineTo(cx - 28, py); ctx.moveTo(cx - 22, py - 14); ctx.lineTo(cx - 16, py);
+    ctx.moveTo(cx - 22, py - 26); ctx.lineTo(cx - 4, py - 36); ctx.stroke();
+    // 0,5 sn'lik izler
+    const T = sc.duration(p);
+    ctx.fillStyle = css('--accent');
+    for (let k = 0; k <= t + 1e-9 && k <= T; k += 0.5) {
+      ctx.globalAlpha = .25;
+      ctx.beginPath(); ctx.arc(cx + 22, gy - sc.h(p, k) * s, 4, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    // tepe çizgisi
+    ctx.strokeStyle = css('--muted'); ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
+    const ty = gy - top * s;
+    ctx.beginPath(); ctx.moveTo(cx - 60, ty); ctx.lineTo(cx + 60, ty); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = css('--muted'); ctx.font = '600 12px system-ui'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.fillText(`tepe ${fmt(top)} m`, cx - 66, ty);
+    // top
+    const hh = sc.h(p, t), by = gy - hh * s - 8;
+    ctx.fillStyle = css('--warn'); ctx.beginPath(); ctx.arc(cx, by, 8, 0, Math.PI * 2); ctx.fill();
+    heightMarker(ctx, cx + 60, gy, by, hh);
+  }
+
+  function drawParachute(ctx, w, h, p, t) {
+    sky(ctx, w, h);
+    const gy = h - 22; ground(ctx, w, h, gy);
+    const s = (gy - 30) / p.H0;
+    const cx = w * .45;
+    // uçak
+    const T = sc.duration(p), px = w * .2 - t * 12;
+    ctx.fillStyle = css('--metal');
+    ctx.beginPath(); ctx.roundRect(px - 30, 20, 60, 10, 5); ctx.fill();
+    ctx.fillRect(px - 6, 14, 12, 22);
+    // açılma çizgisi
+    const oy = gy - p.Hp * s;
+    ctx.strokeStyle = css('--good'); ctx.setLineDash([6, 5]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0, oy); ctx.lineTo(w, oy); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = css('--good'); ctx.font = '600 12px system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillText(`Paraşüt açılır: ${p.Hp} m`, 10, oy - 4);
+    // paraşütçü
+    const hh = sc.h(p, t), y = gy - hh * s - 10;
+    const open = hh <= p.Hp + 1e-6 && t > 0;
+    ctx.strokeStyle = css('--ink'); ctx.lineWidth = 2; ctx.lineCap = 'round';
+    if (open) {
+      ctx.fillStyle = css('--warn');
+      ctx.beginPath(); ctx.arc(cx, y - 26, 22, Math.PI, 0); ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(cx - 22, y - 26); ctx.lineTo(cx, y - 6); ctx.lineTo(cx + 22, y - 26); ctx.stroke();
+      ctx.lineWidth = 2;
+    }
+    ctx.beginPath(); ctx.arc(cx, y - 4, 4, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, y); ctx.lineTo(cx, y + 9);
+    if (open) { ctx.moveTo(cx, y + 9); ctx.lineTo(cx - 4, y + 16); ctx.moveTo(cx, y + 9); ctx.lineTo(cx + 4, y + 16); }
+    else { ctx.moveTo(cx - 9, y - 2); ctx.lineTo(cx + 9, y - 2); ctx.moveTo(cx, y + 9); ctx.lineTo(cx - 7, y + 12); ctx.moveTo(cx, y + 9); ctx.lineTo(cx + 7, y + 12); }
+    ctx.stroke();
+    heightMarker(ctx, cx + 50, gy, y, hh);
+  }
+
+  // ---------- Grafik ----------
+  function drawGraph(ctx, w, h, p, t) {
+    ctx.fillStyle = css('--surface'); ctx.fillRect(0, 0, w, h);
+    const T = sc.duration(p), Hm = sc.hMax(p);
+    const xStep = niceStep(T, w < 500 ? 4 : 8), yStep = niceStep(Hm, 5);
+    const xMax = Math.ceil(T / xStep) * xStep, yMax = Math.ceil(Hm * 1.05 / yStep) * yStep;
+    const L = 56, R = 24, Tp = 30, B = 44;
+    const X = x => L + (x / xMax) * (w - L - R), Y = y => h - B - (y / yMax) * (h - B - Tp);
+
+    // ızgara
+    ctx.strokeStyle = css('--grid'); ctx.lineWidth = 1;
+    ctx.fillStyle = css('--muted'); ctx.font = '500 12px system-ui';
+    for (let x = 0; x <= xMax + 1e-9; x += xStep) {
+      ctx.beginPath(); ctx.moveTo(X(x), Tp); ctx.lineTo(X(x), h - B); ctx.stroke();
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillText(fmt(x), X(x), h - B + 8);
+    }
+    for (let y = 0; y <= yMax + 1e-9; y += yStep) {
+      ctx.beginPath(); ctx.moveTo(L, Y(y)); ctx.lineTo(w - R, Y(y)); ctx.stroke();
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillText(fmt(y), L - 8, Y(y));
+    }
+    // eksenler
+    ctx.strokeStyle = css('--axis'); ctx.fillStyle = css('--axis'); ctx.lineWidth = 1.6;
+    arrowLine(ctx, L, h - B, w - R + 10, h - B);
+    arrowLine(ctx, L, h - B, L, Tp - 14);
+    ctx.font = '700 13px system-ui'; ctx.fillStyle = css('--ink');
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText('Yükseklik (m)', L + 10, Tp - 14);
+    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom'; ctx.fillText('Zaman (sn)', w - R, h - B - 6);
+
+    const N = 500;
+    const path = (t1, t0 = 0) => {
+      ctx.beginPath();
+      for (let i = 0; i <= N; i++) {
+        const tt = t0 + (t1 - t0) * i / N, px = X(tt), py = Y(sc.h(p, tt));
+        i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      }
+    };
+    const fm = sc.formula(p);
+    // soluk tam grafik
+    if ($('fullCurve').checked) {
+      ctx.strokeStyle = css('--curve'); ctx.globalAlpha = .25; ctx.lineWidth = 2; ctx.setLineDash([6, 5]);
+      path(T); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+    }
+    // çizilen grafik
+    if (t > 0) {
+      ctx.lineWidth = 3; ctx.lineJoin = 'round';
+      if (fm.pieces.length) {
+        fm.pieces.forEach((pc, i) => {
+          if (t <= pc.from) return;
+          ctx.strokeStyle = css(PIECE_COLORS[i % 3]);
+          path(Math.min(t, pc.to), pc.from); ctx.stroke();
+        });
+      } else {
+        ctx.strokeStyle = css('--curve'); path(t); ctx.stroke();
+      }
+    }
+    // grafik üstünde formül
+    ctx.font = '700 15px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillStyle = css('--accent');
+    ctx.fillText(fm.singles.length ? `f(x) = ${fm.singles[0].expr}` : 'f(x): parçalı fonksiyon', (L + w - R) / 2, 6);
+    // önemli noktalar
+    sc.keys(p).forEach(([kt, kh]) => {
+      if (kt > t + 1e-6) return;
+      ctx.fillStyle = css('--surface'); ctx.strokeStyle = css('--curve'); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(X(kt), Y(kh), 4.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = css('--muted'); ctx.font = '600 11px system-ui';
+      ctx.textAlign = kt > xMax * .85 ? 'right' : 'left'; ctx.textBaseline = 'bottom';
+      ctx.fillText(`(${fmt(kt)}, ${fmt(kh)})`, X(kt) + (kt > xMax * .85 ? -6 : 6), Y(kh) - 6);
+    });
+    // anlık nokta
+    const hh = sc.h(p, t), cx = X(t), cy = Y(hh);
+    ctx.strokeStyle = css('--accent'); ctx.lineWidth = 1.2; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(cx, h - B); ctx.lineTo(cx, cy); ctx.lineTo(L, cy); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = css('--accent');
+    ctx.beginPath(); ctx.arc(cx, cy, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, Math.PI * 2); ctx.fill();
+    const label = `t = ${fmt(t)} sn, h = ${fmt(hh)} m`;
+    const right = cx > w * .62;
+    pill(ctx, label, cx + (right ? -12 : 12), Math.max(Tp + 10, cy - 22), css('--accent'), '#fff', right ? 'right' : 'left');
+  }
+
+  // ---------- Ana çizim ----------
+  function draw() {
+    const p = P(), T = sc.duration(p);
+    t = Math.min(t, T);
+    const [sw, sh] = fit(sceneCv, sctx);
+    sctx.clearRect(0, 0, sw, sh);
+    sc.draw(sctx, sw, sh, p, t);
+    const [gw, gh] = fit(graphCv, gctx);
+    gctx.clearRect(0, 0, gw, gh);
+    drawGraph(gctx, gw, gh, p, t);
+
+    const hh = sc.h(p, t);
+    const e = 0.01, v = (sc.h(p, Math.min(T, t + e)) - sc.h(p, Math.max(0, t - e))) / (Math.min(T, t + e) - Math.max(0, t - e));
+    $('roT').textContent = `${fmt(t)} sn`;
+    $('roH').textContent = `${fmt(hh)} m`;
+    $('roV').textContent = `${fmt(Math.abs(v))} m/sn`;
+    $('timeOut').textContent = `t = ${fmt(t)} sn`;
+    $('timeSlider').value = T ? Math.round(t / T * 1000) : 0;
+    $('playBtn').textContent = playing ? '❚❚ Durdur' : t >= T - 1e-6 && t > 0 ? '▶ Tekrar' : '▶ Başlat';
+
+    let st;
+    if (t >= T - 1e-6 && t > 0) st = 'Hareket tamamlandı';
+    else if (t === 0 && !playing) st = 'Hazır: Başlat\'a bas';
+    else if (v > 0.05) st = `↑ Yükseliyor: grafik artıyor`;
+    else if (v < -0.05) st = `↓ Alçalıyor: grafik azalıyor`;
+    else st = `→ Yükseklik sabit: grafik yatay`;
+    $('state').textContent = st;
+    updateFormula(p, t);
+  }
+
+  // ---------- Fonksiyon paneli ----------
+  function updateFormula(p, t) {
+    const fm = sc.formula(p);
+    const active = fm.pieces.findIndex((pc, i) => t < pc.to || i === fm.pieces.length - 1);
+    $('fnPieces').innerHTML = fm.pieces.length ? `
+      <div class="pw">f(x) =
+        <div class="brace">${fm.pieces.map((pc, i) => `
+          <span class="${i === active ? 'active' : ''}" style="color:var(${PIECE_COLORS[i % 3]})">${pc.expr},</span>
+          <span class="cond">${pc.cond}</span>`).join('')}
+        </div>
+      </div>` : '';
+    $('fnSingles').innerHTML = fm.singles.map(s => `<div class="single"><small>${s.name}</small>f(x) = ${s.expr}</div>`).join('');
+    $('fnNote').innerHTML = fm.note;
+
+    const cols = [];
+    if (fm.pieces.length) cols.push(['Parçalı gösterim', fm.pieces[active].sub(t), `var(${PIECE_COLORS[active % 3]})`]);
+    fm.singles.forEach(s => cols.push([s.name, s.sub(t), 'var(--accent)']));
+    $('fnTable').innerHTML = `
+      <tr><th>x</th>${cols.map(c => `<th>${c[0]}</th>`).join('')}</tr>
+      <tr><td>${num(t)}</td>${cols.map(c => `<td style="color:${c[2]}">${c[1]}</td>`).join('')}</tr>`;
+  }
+
+  new ResizeObserver(() => draw()).observe(document.querySelector('.layout'));
+  setup();
+})();
+</script>
+</body>
+</html>
