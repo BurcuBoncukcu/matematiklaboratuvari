@@ -536,7 +536,7 @@
   function drawLift(ctx, w, h, p, t) {
     sky(ctx, w, h);
     const gy = h - 28; ground(ctx, w, h, gy);
-    const s = (gy - 64) / Math.max(p.H, 40);
+    const s = (gy - 72) / p.H;
     const bx = w * .1, bw = Math.min(200, w * .2), bh = p.H * s;
     // bina
     ctx.fillStyle = css('--building'); ctx.fillRect(bx, gy - bh, bw, bh);
@@ -700,8 +700,8 @@
     ctx.fillStyle = css('--surface'); ctx.fillRect(0, 0, w, h);
     const T = sc.duration(p), Hm = sc.hMax(p);
     const xStep = niceStep(T, w < 500 ? 4 : 8), yStep = niceStep(Hm, 5);
-    const xMax = Math.ceil(T / xStep) * xStep, yMax = Math.ceil(Hm * 1.05 / yStep) * yStep;
-    const L = 56, R = 24, Tp = 30, B = 44;
+    const xMax = Math.ceil(T / xStep) * xStep, yMax = Math.ceil(Hm / yStep - 1e-9) * yStep;
+    const L = 56, R = 24, Tp = 50, B = 44;
     const X = x => L + (x / xMax) * (w - L - R), Y = y => h - B - (y / yMax) * (h - B - Tp);
 
     // ızgara
