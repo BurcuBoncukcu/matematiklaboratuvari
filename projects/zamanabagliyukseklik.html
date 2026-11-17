@@ -115,7 +115,7 @@
 
   input[type=range] { width: 100%; accent-color: var(--accent); }
   .time-row { display: flex; align-items: center; gap: 10px; }
-  .time-row output { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--accent); min-width: 72px; text-align: right; }
+  .time-row output { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--accent); min-width: 84px; text-align: right; white-space: nowrap; }
 
   .params { display: flex; flex-direction: column; gap: 12px; }
   .params h2, .explain h2 { font-size: 14px; font-weight: 750; margin-bottom: 2px; }
@@ -195,7 +195,7 @@
         <div class="readouts">
           <div class="ro"><span>Zaman</span><strong id="roT">0 sn</strong></div>
           <div class="ro"><span>Yükseklik</span><strong id="roH">0 m</strong></div>
-          <div class="ro"><span>Hız</span><strong id="roV">0 m/sn</strong></div>
+          <div class="ro"><span>Dikey hız</span><strong id="roV">0 m/sn</strong></div>
         </div>
         <div class="state" id="state">Hazır</div>
       </div>
@@ -276,7 +276,6 @@
           : `${p.tw > 0 ? 'Bekleme parçası var' : 'Çıkış ve iniş eğimleri farklı'}, bu yüzden tek bir mutlak değer ifadesiyle yazılamaz. <b>Bekleme 0</b> ve <b>çıkış süresi = iniş süresi</b> yap, tek ifade görünsün.`;
         return { pieces, singles, note };
       },
-      draw: drawElevator,
     },
     {
       id: 'dolap', name: 'Dönme dolap',
@@ -313,39 +312,45 @@
       draw: drawWheel,
     },
     {
-      id: 'top', name: 'Yukarı atılan top',
+      id: 'top', name: 'İleri atılan top',
       params: [
         { key: 'v0', label: 'Atış hızı', unit: 'm/sn', min: 5, max: 30, step: 1, value: 15 },
+        { key: 'a', label: 'Atış açısı', unit: '°', min: 15, max: 80, step: 5, value: 45 },
         { key: 'h0', label: 'Atış yüksekliği', unit: 'm', min: 0, max: 20, step: 1, value: 2 },
         { key: 'g', label: 'Yer çekimi', type: 'select', value: 9.8, options: [[9.8, 'Dünya (9,8 m/sn²)'], [3.7, 'Mars (3,7 m/sn²)'], [1.6, 'Ay (1,6 m/sn²)']] },
       ],
-      duration: p => (p.v0 + Math.sqrt(p.v0 * p.v0 + 2 * p.g * p.h0)) / p.g,
-      h: (p, t) => Math.max(0, p.h0 + p.v0 * t - p.g * t * t / 2),
-      hMax: p => p.h0 + p.v0 * p.v0 / (2 * p.g),
-      keys: p => {
-        const tt = p.v0 / p.g;
-        return [[0, p.h0], [tt, p.h0 + p.v0 * p.v0 / (2 * p.g)], [(p.v0 + Math.sqrt(p.v0 * p.v0 + 2 * p.g * p.h0)) / p.g, 0]];
+      fix: p => {
+        const r = p.a * Math.PI / 180;
+        p.vy = Math.round(p.v0 * Math.sin(r) * 100) / 100;
+        p.vx = Math.round(p.v0 * Math.cos(r) * 100) / 100;
       },
-      story: p => `Top <b>${p.h0} m</b> yükseklikten <b>${p.v0} m/sn</b> hızla dik olarak yukarı atılıyor. Yer çekimi onu yavaşlatıyor, durduruyor ve geri düşürüyor.`,
+      duration: p => (p.vy + Math.sqrt(p.vy * p.vy + 2 * p.g * p.h0)) / p.g,
+      h: (p, t) => Math.max(0, p.h0 + p.vy * t - p.g * t * t / 2),
+      hMax: p => p.h0 + p.vy * p.vy / (2 * p.g),
+      keys: p => {
+        const tt = p.vy / p.g;
+        return [[0, p.h0], [tt, p.h0 + p.vy * p.vy / (2 * p.g)], [(p.vy + Math.sqrt(p.vy * p.vy + 2 * p.g * p.h0)) / p.g, 0]];
+      },
+      story: p => `Top <b>${p.h0} m</b> yükseklikten <b>${p.v0} m/sn</b> hızla, yerle <b>${p.a}°</b> açı yapacak şekilde ileri atılıyor. Yüksekliği yalnızca hızın dikey kısmına (<b>${num(p.vy)} m/sn</b>) bağlıdır.`,
       explain: p => {
-        const tt = p.v0 / p.g;
+        const tt = p.vy / p.g, T = (p.vy + Math.sqrt(p.vy * p.vy + 2 * p.g * p.h0)) / p.g;
         return [
-          `Grafik bir <b>parabol</b>: yükseklik önce artar, sonra azalır.`,
-          `Tepe noktası: <b>${fmt(tt)} sn</b>'de <b>${fmt(p.h0 + p.v0 * p.v0 / (2 * p.g))} m</b>. Bu anda top bir an <b>durur</b> (hız 0).`,
-          `Sahnedeki soluk noktalar her 0,5 sn'deki konumu gösterir: tepeye yaklaştıkça <b>sıklaşır</b>, top yavaşlar.`,
-          `Ay'ı seç: aynı atışla top çok daha yükseğe çıkar ve havada daha uzun kalır.`,
+          `Topun yolu da, yükseklik grafiği de <b>parabol</b>dür. Ama grafiğin yatay ekseni <b>zaman</b>, sahnedeki yatay eksen <b>yol</b>.`,
+          `Tepe noktası: <b>${fmt(tt)} sn</b>'de <b>${fmt(p.h0 + p.vy * p.vy / (2 * p.g))} m</b>. Bu anda top yükselmeyi bırakır, ileri gitmeye devam eder.`,
+          `Top yere <b>${fmt(T)} sn</b> sonra, <b>${fmt(p.vx * T)} m</b> ileride düşer. Soluk noktalar her 0,5 sn'deki konum: yatayda hep eşit aralıklı.`,
+          `Açıyı büyüt: top daha yükseğe çıkar, grafik dikleşir. Ay'ı seç: havada çok daha uzun kalır.`,
         ];
       },
       formula: p => {
-        const a = p.g / 2, tt = p.v0 / p.g, hm = p.h0 + p.v0 * p.v0 / (2 * p.g);
-        const std = (p.h0 ? `${p.h0} + ` : '') + `${p.v0}x − ${num(a)}x²`;
+        const a = p.g / 2, tt = p.vy / p.g, hm = p.h0 + p.vy * p.vy / (2 * p.g);
+        const std = (p.h0 ? `${p.h0} + ` : '') + `${num(p.vy)}x − ${num(a)}x²`;
         return {
           pieces: [],
           singles: [
-            { name: 'Genel form', expr: std, sub: x => `${p.h0 ? p.h0 + ' + ' : ''}${p.v0} · ${num(x)} − ${num(a)} · ${num(x)}² = ${num(p.h0 + p.v0 * x - a * x * x)}` },
+            { name: 'Genel form', expr: std, sub: x => `${p.h0 ? p.h0 + ' + ' : ''}${num(p.vy)} · ${num(x)} − ${num(a)} · ${num(x)}² = ${num(p.h0 + p.vy * x - a * x * x)}` },
             { name: 'Tepe noktası formu', expr: `${num(hm)} − ${num(a)}(x − ${num(tt)})²`, sub: x => `${num(hm)} − ${num(a)} · (${num(x)} − ${num(tt)})² = ${num(hm - a * (x - tt) ** 2)}` },
           ],
-          note: `İkinci dereceden fonksiyon. x² katsayısı −g/2 = −${num(a)} (negatif, kollar aşağı). Tepe noktası (${num(tt)}, ${num(hm)}): iki ifade aynı değeri verir.`,
+          note: `${num(p.vy)}: hızın dikey kısmı (${p.v0} · sin ${p.a}°). x² katsayısı −g/2 = −${num(a)} (kollar aşağı). Tepe noktası (${num(tt)}, ${num(hm)}): iki ifade aynı değeri verir.`,
         };
       },
       draw: drawBall,
@@ -391,8 +396,8 @@
     },
   ];
 
-  // Yük asansörü: cam asansörle aynı matematik, eğik ray üzerinde
-  SCENARIOS.unshift({
+  // Yük asansörü: asansör matematiği, eğik ray üzerinde
+  SCENARIOS[0] = {
     ...SCENARIOS[0],
     id: 'yuk', name: 'Yük asansörü',
     params: [
@@ -403,7 +408,7 @@
     ],
     story: p => `Yük asansörü kamyonun yanından harekete başlıyor, <b>${p.H} m</b> yükseklikteki balkona <b>${p.tu} sn</b>'de sabit hızla çıkıyor${p.tw ? `, eşyaları yüklerken <b>${p.tw} sn</b> bekliyor` : ', eşyaları alıyor (yükleme süresi ihmal)'} ve <b>${p.td} sn</b>'de başladığı noktaya dönüyor.`,
     draw: drawLift,
-  });
+  };
 
   // ---------- Durum ----------
   let sc = SCENARIOS[0];
@@ -530,34 +535,6 @@
   function ground(ctx, w, h, gy) { ctx.fillStyle = css('--ground'); ctx.fillRect(0, gy, w, h - gy); }
 
   // ---------- Sahneler ----------
-  function drawElevator(ctx, w, h, p, t) {
-    sky(ctx, w, h);
-    const gy = h - 28; ground(ctx, w, h, gy);
-    const s = (gy - 50) / 60;
-    const bx = w * .3, bw = Math.min(220, w * .25), bh = p.H * s;
-    // bina
-    ctx.fillStyle = css('--building'); ctx.fillRect(bx, gy - bh, bw, bh);
-    ctx.fillStyle = css('--window');
-    const rows = Math.max(1, Math.floor(bh / 34)), cols = 3;
-    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
-      const ww = bw / cols - 18;
-      ctx.fillRect(bx + 10 + c * (bw / cols), gy - bh + 10 + r * 34, ww, 20);
-    }
-    // teras
-    ctx.fillStyle = css('--metal'); ctx.fillRect(bx - 6, gy - bh - 4, bw + 70, 5);
-    ctx.fillStyle = css('--ink'); ctx.font = '700 14px system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
-    ctx.fillText(`Teras  ${p.H} m`, bx, gy - bh - 10);
-    // asansör kuyusu
-    const sx = bx + bw + 14, sw = 44;
-    ctx.strokeStyle = css('--metal'); ctx.lineWidth = 2;
-    ctx.strokeRect(sx, gy - bh, sw, bh);
-    const hh = sc.h(p, t), cy = gy - hh * s;
-    ctx.fillStyle = css('--accent'); ctx.globalAlpha = .9;
-    ctx.beginPath(); ctx.roundRect(sx + 3, cy - 30, sw - 6, 30, 4); ctx.fill(); ctx.globalAlpha = 1;
-    ctx.fillStyle = '#fff'; ctx.fillRect(sx + 10, cy - 24, sw - 20, 12);
-    heightMarker(ctx, sx + sw + 26, gy, cy, hh);
-  }
-
   function drawBox(ctx, x, y, size) {
     ctx.fillStyle = '#c99a62'; ctx.strokeStyle = '#8a6237'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.roundRect(x, y, size, size, 2); ctx.fill(); ctx.stroke();
@@ -657,38 +634,40 @@
   function drawBall(ctx, w, h, p, t) {
     sky(ctx, w, h);
     const gy = h - 28; ground(ctx, w, h, gy);
-    const top = sc.hMax(p);
-    const s = (gy - 30) / (top * 1.08);
-    const cx = w * .45;
+    const T = sc.duration(p), top = sc.hMax(p), range = p.vx * T;
+    const ox = 70;
+    const s = Math.min((gy - 34) / (top * 1.1), (w - ox - 40) / Math.max(range, 1));
+    const X = tt => ox + p.vx * tt * s, Y = tt => gy - sc.h(p, tt) * s;
     // platform
-    if (p.h0 > 0) {
-      ctx.fillStyle = css('--building'); ctx.fillRect(cx - 50, gy - p.h0 * s, 70, p.h0 * s);
-    }
+    if (p.h0 > 0) { ctx.fillStyle = css('--building'); ctx.fillRect(ox - 50, gy - p.h0 * s, 56, p.h0 * s); }
     // kişi
     const py = gy - p.h0 * s;
     ctx.strokeStyle = css('--ink'); ctx.lineWidth = 2.5; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.arc(cx - 22, py - 38, 6, 0, Math.PI * 2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx - 22, py - 32); ctx.lineTo(cx - 22, py - 14);
-    ctx.lineTo(cx - 28, py); ctx.moveTo(cx - 22, py - 14); ctx.lineTo(cx - 16, py);
-    ctx.moveTo(cx - 22, py - 26); ctx.lineTo(cx - 4, py - 36); ctx.stroke();
-    // 0,5 sn'lik izler
-    const T = sc.duration(p);
-    ctx.fillStyle = css('--accent');
-    for (let k = 0; k <= t + 1e-9 && k <= T; k += 0.5) {
-      ctx.globalAlpha = .25;
-      ctx.beginPath(); ctx.arc(cx + 22, gy - sc.h(p, k) * s, 4, 0, Math.PI * 2); ctx.fill();
-    }
+    ctx.beginPath(); ctx.arc(ox - 22, py - 38, 6, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox - 22, py - 32); ctx.lineTo(ox - 22, py - 14);
+    ctx.lineTo(ox - 28, py); ctx.moveTo(ox - 22, py - 14); ctx.lineTo(ox - 16, py);
+    ctx.moveTo(ox - 22, py - 26); ctx.lineTo(ox - 8, py - 34); ctx.stroke();
+    // yörünge (soluk) ve geçilen yol
+    const path = t1 => { ctx.beginPath(); for (let i = 0; i <= 200; i++) { const tt = t1 * i / 200; i ? ctx.lineTo(X(tt), Y(tt)) : ctx.moveTo(X(tt), Y(tt)); } };
+    ctx.strokeStyle = css('--muted'); ctx.globalAlpha = .35; ctx.lineWidth = 1.5; ctx.setLineDash([4, 5]);
+    path(T); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+    if (t > 0) { ctx.strokeStyle = css('--warn'); ctx.lineWidth = 2.5; path(t); ctx.stroke(); }
+    // 0,5 sn izleri
+    ctx.fillStyle = css('--accent'); ctx.globalAlpha = .35;
+    for (let k = 0.5; k < t; k += 0.5) { ctx.beginPath(); ctx.arc(X(k), Y(k), 3.5, 0, Math.PI * 2); ctx.fill(); }
     ctx.globalAlpha = 1;
     // tepe çizgisi
+    const tt = p.vy / p.g, ty = gy - top * s;
     ctx.strokeStyle = css('--muted'); ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
-    const ty = gy - top * s;
-    ctx.beginPath(); ctx.moveTo(cx - 60, ty); ctx.lineTo(cx + 60, ty); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle = css('--muted'); ctx.font = '600 12px system-ui'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-    ctx.fillText(`tepe ${fmt(top)} m`, cx - 66, ty);
+    ctx.beginPath(); ctx.moveTo(X(tt) - 50, ty); ctx.lineTo(X(tt) + 50, ty); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = css('--muted'); ctx.font = '600 12px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText(`tepe ${fmt(top)} m`, X(tt), ty - 4);
+    // menzil
+    ctx.textBaseline = 'top'; ctx.fillText(`${fmt(range)} m`, X(T), gy + 6);
     // top
-    const hh = sc.h(p, t), by = gy - hh * s - 8;
-    ctx.fillStyle = css('--warn'); ctx.beginPath(); ctx.arc(cx, by, 8, 0, Math.PI * 2); ctx.fill();
-    heightMarker(ctx, cx + 60, gy, by, hh);
+    const hh = sc.h(p, t), bx = X(t), by = Y(t) - 7;
+    ctx.fillStyle = css('--warn'); ctx.beginPath(); ctx.arc(bx, by, 7, 0, Math.PI * 2); ctx.fill();
+    heightMarker(ctx, bx, gy, by + 7, hh);
   }
 
   function drawParachute(ctx, w, h, p, t) {
