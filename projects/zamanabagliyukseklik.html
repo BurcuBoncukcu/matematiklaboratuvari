@@ -73,7 +73,7 @@
   .icon-btn:hover { border-color: var(--accent); }
 
   .stage, .below { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
-  .canvas-box { position: relative; width: 100%; aspect-ratio: 16 / 10; }
+  .canvas-box { position: relative; width: 100%; aspect-ratio: 16 / 8; max-height: 44vh; min-height: 240px; }
   canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; border-radius: 12px; }
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 12px; min-width: 0; }
   .controls { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
@@ -189,10 +189,6 @@
         <div class="ro"><span>Zaman</span><strong id="roT">0 sn</strong></div>
         <div class="ro"><span>Yükseklik</span><strong id="roH">0 m</strong></div>
         <div class="ro"><span>Dikey hız</span><strong id="roV">0 m/sn</strong></div>
-      </div>
-      <div class="row">
-        <div class="state" id="state">Hazır</div>
-        <label class="check"><input type="checkbox" id="fullCurve"> Grafiğin tamamını soluk göster</label>
       </div>
     </div>
 
@@ -464,7 +460,6 @@
     document.querySelectorAll('[data-speed]').forEach(x => x.setAttribute('aria-pressed', x === b));
   });
   $('timeSlider').addEventListener('input', e => { playing = false; t = sc.duration(P()) * e.target.value / 1000; draw(); });
-  $('fullCurve').addEventListener('change', draw);
   $('themeBtn').onclick = () => {
     const root = document.documentElement;
     root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
@@ -585,14 +580,14 @@
     const hh = sc.h(p, t), f = hh / p.H;
     const px = x0 + (x1 - x0) * f, py = y0 + (y1 - y0) * f;
     ctx.strokeStyle = css('--accent'); ctx.lineWidth = 4;
-    ctx.beginPath(); ctx.moveTo(px - 4, py - 16); ctx.lineTo(px - 4, py); ctx.lineTo(px + 46, py); ctx.lineTo(px + 46, py - 10); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(px - 46, py - 10); ctx.lineTo(px - 46, py); ctx.lineTo(px + 4, py); ctx.lineTo(px + 4, py - 16); ctx.stroke();
     ctx.lineCap = 'butt';
     // kutular: balkonda bekler, platform tepeye varınca platforma geçer
     const loaded = t >= p.tu - 1e-6;
-    if (loaded) boxStack(ctx, px + 6, py - 2); else boxStack(ctx, balX + 3, balY - 3);
+    if (loaded) boxStack(ctx, px - 38, py - 2); else boxStack(ctx, balX + 3, balY - 3);
     // yükseklik etiketi
-    ctx.fillStyle = css('--warn'); ctx.font = '800 16px system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    ctx.fillText(`${fmt(hh)} m`, px + 56, py - 12);
+    ctx.fillStyle = css('--warn'); ctx.font = '800 16px system-ui'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.fillText(`${fmt(hh)} m`, px - 54, py - 12);
   }
 
   function drawWheel(ctx, w, h, p, t) {
@@ -738,7 +733,7 @@
     };
     const fm = sc.formula(p);
     // soluk tam grafik
-    if ($('fullCurve').checked) {
+    if (false) {
       ctx.strokeStyle = css('--curve'); ctx.globalAlpha = .25; ctx.lineWidth = 2; ctx.setLineDash([6, 5]);
       path(T); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
     }
@@ -800,13 +795,7 @@
     $('timeSlider').value = T ? Math.round(t / T * 1000) : 0;
     $('playBtn').textContent = playing ? '❚❚ Durdur' : t >= T - 1e-6 && t > 0 ? '▶ Tekrar' : '▶ Başlat';
 
-    let st;
-    if (t >= T - 1e-6 && t > 0) st = 'Hareket tamamlandı';
-    else if (t === 0 && !playing) st = 'Hazır: Başlat\'a bas';
-    else if (v > 0.05) st = `↑ Yükseliyor: grafik artıyor`;
-    else if (v < -0.05) st = `↓ Alçalıyor: grafik azalıyor`;
-    else st = `→ Yükseklik sabit: grafik yatay`;
-    $('state').textContent = st;
+
     updateFormula(p, t);
   }
 
